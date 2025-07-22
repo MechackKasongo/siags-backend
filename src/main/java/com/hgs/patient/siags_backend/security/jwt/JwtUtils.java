@@ -17,7 +17,7 @@ import java.util.Date;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    @Value("${hgs.app.jwtSecret}") // Clé secrète définie dans application.properties
+    @Value("${hgs.app.jwtSecret}") // Clé secrète définie dans l'application.properties
     private String jwtSecret;
 
     @Value("${hgs.app.jwtExpirationMs}") // Durée de validité du token
@@ -42,14 +42,13 @@ public class JwtUtils {
 
     // Récupère le nom d'utilisateur depuis le token
     public String getUserNameFromJwtToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(key()).build()
-                .parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parser().setSigningKey(key()).build().parseClaimsJws(token).getBody().getSubject();
     }
 
     // Valide le token JWT
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken);
+            Jwts.parser().setSigningKey(key()).build().parse(authToken);
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
