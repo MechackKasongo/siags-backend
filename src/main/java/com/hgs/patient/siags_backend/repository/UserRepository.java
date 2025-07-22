@@ -1,0 +1,13 @@
+package com.hgs.patient.siags_backend.repository;
+
+import com.hgs.patient.siags_backend.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByUsername(String username); // Pour trouver un utilisateur par son nom
+    Boolean existsByUsername(String username); // Pour vérifier si un nom d'utilisateur existe déjà
+}
