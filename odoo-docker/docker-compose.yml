@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  web:
+    image: odoo:17.0
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo-web-data:/var/lib/odoo # Données persistantes d'Odoo
+      - ./config:/etc/odoo # Configuration d'Odoo
+    environment:
+      - HOST=db
+      - PORT=5432
+      - USER=odoo
+      - PASSWORD=odoo_password # Mot de passe de la DB (doit correspondre à celui de PostgreSQL)
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo_password # Mot de passe de la DB (doit correspondre à celui d'Odoo)
+      - POSTGRES_USER=odoo # Nom d'utilisateur de la DB (doit correspondre à celui d'Odoo)
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data # Données persistantes de PostgreSQL
+
+volumes:
+  odoo-web-data:
+  odoo-db-data:
