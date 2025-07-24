@@ -167,4 +167,48 @@ public class OdooController {
             return new ResponseEntity<>("Error creating Odoo product: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    /**
+     * Endpoint pour mettre à jour un produit Odoo existant.
+     *
+     * @param id         L'ID du produit à mettre à jour.
+     * @param updateData Un Map contenant les données à mettre à jour.
+     * @return ResponseEntity avec un statut 200 OK si la mise à jour a réussi, ou 500 Internal Server Error.
+     */
+    @PutMapping("/products/{id}")
+    public ResponseEntity<Void> updateOdooProduct(@PathVariable int id, @RequestBody Map<String, Object> updateData) {
+        try {
+            boolean success = odooIntegrationService.updateOdooRecords("product.template", new int[]{id}, updateData);
+            if (success) {
+                return ResponseEntity.ok().build(); // 200 OK
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // 500 Internal Server Error
+            }
+        } catch (Exception e) {
+            logger.error("Error updating Odoo product with ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+
+    /**
+     * Endpoint pour supprimer un produit Odoo par son ID.
+     *
+     * @param id L'ID du produit à supprimer.
+     * @return ResponseEntity avec un statut 200 OK si la suppression a réussi, ou 500 Internal Server Error.
+     */
+    @DeleteMapping("/products/{id}") // NOUVEL ENDPOINT À AJOUTER POUR LA SUPPRESSION DE PRODUITS
+    public ResponseEntity<Void> deleteOdooProduct(@PathVariable int id) {
+        try {
+            boolean success = odooIntegrationService.deleteOdooRecords("product.template", new int[]{id});
+            if (success) {
+                return ResponseEntity.ok().build(); // 200 OK
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // 500 Internal Server Error
+            }
+        } catch (Exception e) {
+            logger.error("Error deleting Odoo product with ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 }
