@@ -1,13 +1,21 @@
 package com.hgs.patient.siags_backend.model;
-import jakarta.persistence.*; // Pour les annotations JPA
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDate;
-import jakarta.validation.constraints.*; // Ajout pour les annotations de validation
 
 @Entity
 @Table(name = "patients")
 @Data // Lombok génère automatiquement les getters, setters, toString, equals et hashCode
-
+@NoArgsConstructor // Ajouté pour un constructeur par défaut nécessaire à JPA
+@AllArgsConstructor // Utile pour créer facilement des objets Patient
 public class Patient {
 
     @Id // Indique que ce champ est la clé primaire de l'entité
@@ -26,11 +34,11 @@ public class Patient {
 
     @Column(length = 10) // Longueur max 10 caractères pour le sexe (ex: "MASCULIN", "FEMININ")
     @Size(max = 10, message = "Le sexe ne doit pas dépasser 10 caractères")
-    private String sexe;
+    private String genre;
 
     @Column(name = "date_naissance")
     @Past(message = "La date de naissance doit être dans le passé")
-    private LocalDate dateNaissance;
+    private LocalDate dateDeNaissance;
 
     @Column(length = 150)
     @Size(max = 150, message = "L'adresse ne doit pas dépasser 150 caractères")
@@ -45,15 +53,20 @@ public class Patient {
     @Size(max = 50, message = "Le numéro de dossier ne doit pas dépasser 50 caractères")
     private String numeroDossier; // Numéro de dossier unique généré par l'Agent d'Admission
 
-    /*
-    public Patient() {
-        // Constructeur par défaut
-    }
+    // Champs manquants ajoutés :
+    @Column(length = 100)
+    @Email(message = "L'email doit être valide")
+    @Size(max = 100, message = "L'email ne doit pas dépasser 100 caractères")
+    private String email;
 
-    // Getters et Setters pour chaque champ
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    // ... et ainsi de suite pour nom, prenom, etc.
-    */
+    @Column(name = "type_de_sang", length = 5)
+    @Size(max = 5, message = "Le type de sang ne doit pas dépasser 5 caractères")
+    private String typeDeSang;
+
+    @Column(name = "maladies_connues", columnDefinition = "TEXT")
+    private String maladiesConnues;
+
+    @Column(columnDefinition = "TEXT")
+    private String allergies;
 
 }

@@ -78,3 +78,126 @@ public class AdmissionController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
+//
+//package com.hgs.patient.siags_backend.controller;
+//
+//import com.hgs.patient.siags_backend.dto.AdmissionRequest;
+//import com.hgs.patient.siags_backend.dto.AdmissionResponseDTO;
+//import com.hgs.patient.siags_backend.model.Admission;
+//import com.hgs.patient.siags_backend.service.AdmissionService;
+//import jakarta.validation.Valid;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.http.HttpStatus;
+//import org.springframework.http.ResponseEntity;
+//import org.springframework.web.bind.annotation.*;
+//
+//        import java.time.LocalDateTime;
+//import java.util.List;
+//
+//@RestController
+//@RequestMapping("/api/admissions") // Chemin de base pour les requêtes d'admission
+//public class AdmissionController {
+//
+//    private final AdmissionService admissionService;
+//
+//    @Autowired
+//    public AdmissionController(AdmissionService admissionService) {
+//        this.admissionService = admissionService;
+//    }
+//
+//    // Méthode utilitaire pour convertir AdmissionRequest en Admission
+//    // Utilisée pour la création et la mise à jour
+//    private Admission convertToEntity(AdmissionRequest dto) {
+//        Admission admission = new Admission();
+//        // L'ID du patient et l'admissionPersonnel sont gérés séparément
+//        admission.setAdmissionDate(dto.getAdmissionDate() != null ? dto.getAdmissionDate() : LocalDateTime.now());
+//        admission.setReasonForAdmission(dto.getReasonForAdmission());
+//        admission.setAssignedDepartment(dto.getAssignedDepartment());
+//        admission.setRoomNumber(dto.getRoomNumber());
+//        admission.setBedNumber(dto.getBedNumber());
+//        admission.setStatus(dto.getStatus());
+//        admission.setDischargeDate(dto.getDischargeDate());
+//        admission.setDischargeSummary(dto.getDischargeSummary());
+//        return admission;
+//    }
+//
+//    /**
+//     * Crée une nouvelle admission pour un patient spécifique.
+//     * URL: POST /api/admissions/patient/{patientId}
+//     */
+//    @PostMapping("/patient/{patientId}")
+//    public ResponseEntity<AdmissionResponseDTO> createAdmission(
+//            @PathVariable Long patientId,
+//            @Valid @RequestBody AdmissionRequest admissionRequest) {
+//        Admission admissionToCreate = convertToEntity(admissionRequest);
+//        AdmissionResponseDTO createdAdmission = admissionService.createAdmission(patientId, admissionToCreate);
+//        return new ResponseEntity<>(createdAdmission, HttpStatus.CREATED);
+//    }
+//
+//    /**
+//     * Récupère une admission par son ID.
+//     * URL: GET /api/admissions/{id}
+//     */
+//    @GetMapping("/{id}")
+//    public ResponseEntity<AdmissionResponseDTO> getAdmissionById(@PathVariable Long id) {
+//        AdmissionResponseDTO admission = admissionService.getAdmissionById(id);
+//        return new ResponseEntity<>(admission, HttpStatus.OK);
+//    }
+//
+//    /**
+//     * Récupère toutes les admissions.
+//     * URL: GET /api/admissions
+//     */
+//    @GetMapping
+//    public ResponseEntity<List<AdmissionResponseDTO>> getAllAdmissions() {
+//        List<AdmissionResponseDTO> admissions = admissionService.getAllAdmissions();
+//        return new ResponseEntity<>(admissions, HttpStatus.OK);
+//    }
+//
+//    /**
+//     * Récupère toutes les admissions pour un patient donné.
+//     * URL: GET /api/admissions/patient/{patientId}
+//     */
+//    @GetMapping("/patient/{patientId}")
+//    public ResponseEntity<List<AdmissionResponseDTO>> getAdmissionsByPatient(@PathVariable Long patientId) {
+//        List<AdmissionResponseDTO> admissions = admissionService.getAdmissionsByPatient(patientId);
+//        return new ResponseEntity<>(admissions, HttpStatus.OK);
+//    }
+//
+//    /**
+//     * Met à jour une admission existante.
+//     * URL: PUT /api/admissions/{id}
+//     */
+//    @PutMapping("/{id}")
+//    public ResponseEntity<AdmissionResponseDTO> updateAdmission(
+//            @PathVariable Long id,
+//            @Valid @RequestBody AdmissionRequest admissionRequest) {
+//        Admission admissionDetails = convertToEntity(admissionRequest); // Convertit le DTO en entité pour le service
+//        AdmissionResponseDTO updatedAdmission = admissionService.updateAdmission(id, admissionDetails);
+//        return new ResponseEntity<>(updatedAdmission, HttpStatus.OK);
+//    }
+//
+//    /**
+//     * Marque une admission comme "sortie" (DISCHARGED).
+//     * URL: PUT /api/admissions/{id}/discharge
+//     * Vous pouvez ajuster le corps de la requête si vous voulez plus d'informations pour le décharge.
+//     */
+//    @PutMapping("/{id}/discharge")
+//    public ResponseEntity<AdmissionResponseDTO> dischargeAdmission(
+//            @PathVariable Long id,
+//            @RequestParam(required = false) String dischargeSummary) {
+//        AdmissionResponseDTO dischargedAdmission = admissionService.dischargeAdmission(id, dischargeSummary);
+//        return new ResponseEntity<>(dischargedAdmission, HttpStatus.OK);
+//    }
+//
+//
+//    /**
+//     * Supprime une admission par son ID.
+//     * URL: DELETE /api/admissions/{id}
+//     */
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<Void> deleteAdmission(@PathVariable Long id) {
+//        admissionService.deleteAdmission(id);
+//        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+//    }
+//}

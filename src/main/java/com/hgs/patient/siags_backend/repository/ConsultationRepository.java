@@ -47,5 +47,5 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
 //    // Méthode pour trouver les consultations d'un médecin avec un statut spécifique et entre deux dates
 //    List<Consultation> findByDoctorAndStatusAndConsultationDateBetween(User doctor, Consultation.ConsultationStatus status, LocalDateTime startDate, LocalDateTime endDate);
 //    // Méthode pour trouver les consultations d'un patient avec un statut spécifique
-//    List<Consultation> findByPatientAndStatusAndDiagnosisContainingIgnoreCase(Patient patient, Consultation.ConsultationStatus status, String diagnosis);
+//    List<Consultation> findByPatientAndStatusAndDiagnosisContainingIgnoreCase(Patient patient,Consultation.ConsultationStatus status, String diagnosis);
 }
