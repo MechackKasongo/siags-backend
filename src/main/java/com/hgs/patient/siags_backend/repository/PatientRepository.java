@@ -9,12 +9,12 @@ import java.util.Optional;
 
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, Long> {
-    // méthode pour trouver un patient par son ID
-    Optional<Patient> findByNumeroDossier(String numeroDossier);
+    // method to find a patient by their record number
+    Optional<Patient> findByRecordNumber(String recordNumber); // Renamed from findByNumeroDossier
 
-    // méthode pour la recherche par nom ou prénom (insensible à la casse)
-    List<Patient> findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(String nom, String prenom);
+    // method for searching by last name or first name (case-insensitive)
+    List<Patient> findByLastNameContainingIgnoreCaseOrFirstNameContainingIgnoreCase(String lastName, String firstName); // Renamed from findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase
 
-    // méthode pour la recherche par numéro de dossier (insensible à la casse)
-    // List<Patient> findByNumeroDossierContainingIgnoreCase(String numeroDossier);
+    // method for searching by record number (case-insensitive)
+    // List<Patient> findByRecordNumberContainingIgnoreCase(String recordNumber); // Renamed from findByNumeroDossierContainingIgnoreCase
 }

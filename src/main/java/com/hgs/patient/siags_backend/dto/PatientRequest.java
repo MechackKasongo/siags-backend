@@ -14,28 +14,29 @@ public class PatientRequest {
 
     @NotBlank(message = "Le nom ne peut pas être vide")
     @Size(max = 100, message = "Le nom ne peut pas dépasser 100 caractères")
-    private String nom;
+    private String lastName; // Renommé de 'nom'
 
     @NotBlank(message = "Le prénom ne peut pas être vide")
     @Size(max = 100, message = "Le prénom ne peut pas dépasser 100 caractères")
-    private String prenom;
+    private String firstName; // Renommé de 'prenom'
 
     // Changement de 'sexe' à 'genre' pour la cohérence
     @Size(max = 10, message = "Le genre ne peut pas dépasser 10 caractères")
     @Pattern(regexp = "MASCULIN|FEMININ|AUTRE", message = "Le genre doit être 'MASCULIN', 'FEMININ' ou 'AUTRE'")
-    private String genre;
+    private String gender; // Renommé de 'genre'
 
     // Changement de 'dateNaissance' à 'dateDeNaissance' pour la cohérence
     @PastOrPresent(message = "La date de naissance ne peut pas être dans le futur")
+    // Gardé PastOrPresent pour cohérence avec Patient entity
     @NotNull(message = "La date de naissance est obligatoire")
-    private LocalDate dateDeNaissance;
+    private LocalDate birthDate; // Renommé de 'dateDeNaissance'
 
     @Size(max = 150, message = "L'adresse ne peut pas dépasser 150 caractères")
-    private String adresse;
+    private String address; // Renommé de 'adresse'
 
     @Size(max = 20, message = "Le numéro de téléphone ne peut pas dépasser 20 caractères")
     @Pattern(regexp = "^[0-9]{10,20}$", message = "Le format du téléphone est invalide")
-    private String telephone;
+    private String phoneNumber; // Renommé de 'telephone'
 
     // Ajout du champ email
     @Email(message = "L'email doit être valide")
@@ -44,13 +45,13 @@ public class PatientRequest {
 
     @NotBlank(message = "Le numéro de dossier est obligatoire")
     @Size(max = 50, message = "Le numéro de dossier ne peut pas dépasser 50 caractères")
-    private String numeroDossier;
+    private String recordNumber; // Renommé de 'numeroDossier'
 
     // Ajout des champs TypeDeSang, MaladiesConnues, Allergies
     @Size(max = 5, message = "Le type de sang ne doit pas dépasser 5 caractères")
-    private String typeDeSang;
+    private String bloodType; // Renommé de 'typeDeSang'
 
-    private String maladiesConnues;
+    private String knownIllnesses; // Renommé de 'maladiesConnues'
 
-    private String allergies;
+    private String allergies; // Nom déjà en anglais
 }

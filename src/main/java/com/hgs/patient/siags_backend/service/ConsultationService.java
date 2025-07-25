@@ -38,18 +38,22 @@ public class ConsultationService {
         dto.setTreatmentPlan(consultation.getTreatmentPlan());
         dto.setNotes(consultation.getNotes());
 
-        // Remplir les informations du patient
+        // Remplir les informations du patient en utilisant les noms de champs anglais
         if (consultation.getPatient() != null) {
             dto.setPatientId(consultation.getPatient().getId());
-            dto.setPatientNomComplet(consultation.getPatient().getNom() + " " + consultation.getPatient().getPrenom());
+            dto.setPatientNomComplet(consultation.getPatient().getLastName() + " " + consultation.getPatient().getFirstName());
+            // REMARQUE : Il est recommandé de renommer 'patientNomComplet' en 'patientFullName'
+            // dans votre ConsultationResponseDTO pour maintenir la cohérence anglaise.
         }
 
         // Remplir les informations du médecin
         if (consultation.getDoctor() != null) {
             dto.setDoctorId(consultation.getDoctor().getId());
             dto.setDoctorNomComplet(consultation.getDoctor().getUsername()); // Ou nom/prénom si disponibles sur User
-            // Si votre entité User a des champs nom/prénom:
+            // Si votre entité User a des champs nom/prénom (par exemple, lastName, firstName):
             // dto.setDoctorNomComplet(consultation.getDoctor().getFirstName() + " " + consultation.getDoctor().getLastName());
+            // REMARQUE : Il est recommandé de renommer 'doctorNomComplet' en 'doctorFullName'
+            // dans votre ConsultationResponseDTO pour maintenir la cohérence anglaise.
         }
 
         return dto;
@@ -114,10 +118,6 @@ public class ConsultationService {
         consultation.setDiagnosis(consultationDetails.getDiagnosis());
         consultation.setTreatmentPlan(consultationDetails.getTreatmentPlan());
         consultation.setNotes(consultationDetails.getNotes());
-
-        // Note: Patient et Doctor ne sont pas censés être modifiés via un update
-        //       classique d'une consultation existante.
-        //       Si cela est nécessaire, il faudrait une logique spécifique.
 
         Consultation updatedConsultation = consultationRepository.save(consultation);
         return mapToDTO(updatedConsultation);

@@ -38,8 +38,10 @@ public class AdmissionService {
         // Remplir les informations du patient
         if (admission.getPatient() != null) {
             dto.setPatientId(admission.getPatient().getId());
-            // Concaténer nom et prénom pour le nom complet du patient
-            dto.setPatientNomComplet(admission.getPatient().getNom() + " " + admission.getPatient().getPrenom());
+            // Concaténer nom et prénom pour le nom complet du patient en utilisant les nouveaux noms de champs
+            dto.setPatientNomComplet(admission.getPatient().getLastName() + " " + admission.getPatient().getFirstName());
+            // REMARQUE : Il est recommandé de renommer 'patientNomComplet' en 'patientFullName'
+            // dans votre AdmissionResponseDTO pour maintenir la cohérence anglaise.
         }
 
         // Remplir le nom d'utilisateur du personnel d'admission (si présent)
@@ -55,29 +57,26 @@ public class AdmissionService {
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient non trouvé avec l'ID : " + patientId));
 
-        // Note: Si vous voulez associer le personnel d'admission, vous devrez le récupérer via un UserRepository
-        // et le définir sur l'objet admission avant de sauvegarder. Pour l'instant, on ne le fait pas.
-
         admission.setPatient(patient);
         admission.setAdmissionDate(LocalDateTime.now());
         if (admission.getStatus() == null) {
             admission.setStatus(Admission.AdmissionStatus.ACTIVE);
         }
         Admission savedAdmission = admissionRepository.save(admission);
-        return mapToDTO(savedAdmission); // <-- Mappez l'entité sauvegardée vers le DTO
+        return mapToDTO(savedAdmission);
     }
 
     // Récupérer une admission par son ID (retourne le DTO)
     public AdmissionResponseDTO getAdmissionById(Long id) {
         Admission admission = admissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Admission non trouvée avec l'ID : " + id));
-        return mapToDTO(admission); // <-- Mappez l'entité vers le DTO
+        return mapToDTO(admission);
     }
 
     // Récupérer toutes les admissions (retourne une liste de DTOs)
     public List<AdmissionResponseDTO> getAllAdmissions() {
         return admissionRepository.findAll().stream()
-                .map(this::mapToDTO) // <-- Mappez chaque entité vers son DTO correspondant
+                .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -86,7 +85,7 @@ public class AdmissionService {
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient non trouvé avec l'ID : " + patientId));
         return admissionRepository.findByPatient(patient).stream()
-                .map(this::mapToDTO) // <-- Mappez chaque entité vers son DTO
+                .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -94,11 +93,6 @@ public class AdmissionService {
     public AdmissionResponseDTO updateAdmission(Long id, Admission admissionDetails) {
         Admission admission = admissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Admission non trouvée avec l'ID : " + id));
-
-        // Assurez-vous de ne pas modifier le patient associé directement ici si ce n'est pas le but
-        // Ou ajoutez une vérification/logique si le patientId est censé être modifiable.
-        // Pour les champs "patient" et "admissionPersonnel", ne les mettez pas à jour à partir de admissionDetails
-        // si votre DTO d'entrée ne les contient pas, ou si votre Admission est un DTO d'entrée.
 
         admission.setReasonForAdmission(admissionDetails.getReasonForAdmission());
         admission.setAssignedDepartment(admissionDetails.getAssignedDepartment());
@@ -109,7 +103,7 @@ public class AdmissionService {
         admission.setDischargeSummary(admissionDetails.getDischargeSummary());
 
         Admission updatedAdmission = admissionRepository.save(admission);
-        return mapToDTO(updatedAdmission); // <-- Mappez l'entité mise à jour vers le DTO
+        return mapToDTO(updatedAdmission);
     }
 
     // Marquer une admission comme sortie (retourne le DTO)
@@ -122,7 +116,7 @@ public class AdmissionService {
         admission.setDischargeSummary(dischargeSummary);
 
         Admission dischargedAdmission = admissionRepository.save(admission);
-        return mapToDTO(dischargedAdmission); // <-- Mappez l'entité déchargée vers le DTO
+        return mapToDTO(dischargedAdmission);
     }
 
     // Supprimer une admission
