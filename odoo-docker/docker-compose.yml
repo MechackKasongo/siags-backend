@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  web:
+    image: odoo:17.0 # Make sure this matches the Odoo version you intend to use
+    depends_on:
+      - db
+    ports:
+      - "8069:8069" # Odoo HTTP port (access via http://localhost:8069)
+      - "8071:8071" # Odoo longpolling port (for real-time updates)
+    volumes:
+      - odoo-web-data:/var/lib/odoo # Persistent storage for Odoo's filestore
+      - ./config:/etc/odoo # Mount a local 'config' directory for odoo.conf (optional)
+      - ./addons:/mnt/extra-addons # Mount a local 'addons' directory for your custom modules
+    environment:
+      # These variables tell Odoo how to connect to the PostgreSQL database
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+      - ODOO_RC=/etc/odoo/odoo.conf # Specifies the path to an internal Odoo config file (if used)
+    command: --addons-path=/mnt/extra-addons # Tells Odoo where to find extra modules
+
+  db:
+    image: postgres:15 # PostgreSQL version for your database
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo # <-- Must be 'odoo'
+      - POSTGRES_USER=odoo
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data # Persistent storage for PostgreSQL data
+
+volumes:
+  odoo-web-data:
+  odoo-db-data:

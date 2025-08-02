@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- menuitems.xml -->
+
+        <menuitem id="reception" name="Reception" sequence="0"/>
+
+
+        <!--menuitem id="doctor_menu" action="action_medical_history" name="Doctor Log"/-->
+        <menuitem id="doctor" name="Doctor Log" sequence="1"/>
+        <!--menuitem id="doctor_id" parent="doctor" action="hospital_management_system.action_medical_history"/-->
+        <!--menuitem id="icu_bed_login" name="ICU Login"  action="hospital_management_system.action_icu_bed_login" sequence="3"/-->
+
+        <menuitem id="icu_bed_login" name="ICU Login" sequence="3"/>
+        <!--menuitem id="icu_menu_id" parent="icu_bed_login" action="hospital_management_system.action_icu_beds" /-->
+        <!--menuitem id="menu_icu_booking" name="ICU Bookings" parent="icu_bed_login" action="hospital_management_system.action_icu_bookings" /-->
+        <!--menuitem id="menu_medication_plan_lines" name="Medication Plan" parent="icu_bed_login" action="action_medication_plan_line" /-->
+
+        <!--menuitem id="reception" name="Reception" sequence="10"/-->
+
+        <menuitem id="billing_id" name="Medical Billing" sequence="2"/> <!-- No action here -->
+
+        <!--menuitem id="billing" parent="billing_id" action="hospital_management_system.action_medical_bill"/-->
+        <!--menuitem id="billing" action="hospital_management_system.action_medical_bill" parent="billing_id" name="Hospital Billing"/-->
+    </data>
+</odoo>
+
