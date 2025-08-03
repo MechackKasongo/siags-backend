@@ -1,211 +1,133 @@
 package com.hgs.patient.siags_backend.controller;
 
-
+import com.hgs.patient.siags_backend.dto.ConsultationCountByDoctorDTO;
+import com.hgs.patient.siags_backend.dto.ConsultationRequest;
 import com.hgs.patient.siags_backend.dto.ConsultationResponseDTO;
-
-import com.hgs.patient.siags_backend.model.Consultation;
-
 import com.hgs.patient.siags_backend.service.ConsultationService;
-
 import jakarta.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.format.annotation.DateTimeFormat;
-
 import org.springframework.http.HttpStatus;
-
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.security.access.prepost.PreAuthorize;
-
 import org.springframework.web.bind.annotation.*;
 
-
 import java.time.LocalDateTime;
-
 import java.util.List;
 
-
-@CrossOrigin(origins = "*", maxAge = 3600) // Pour autoriser les requêtes depuis un frontend différent
-
+/**
+ * Contrôleur REST pour la gestion des consultations.
+ * Expose des endpoints sécurisés pour créer, lire, mettre à jour et supprimer des consultations.
+ * Les autorisations sont gérées via des annotations @PreAuthorize.
+ */
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-
-@RequestMapping("/api/consultations") // Préfixe pour tous les endpoints de ce contrôleur
-
+@RequestMapping("/api/consultations")
 public class ConsultationController {
 
+    private final ConsultationService consultationService;
 
     @Autowired
+    public ConsultationController(ConsultationService consultationService) {
+        this.consultationService = consultationService;
+    }
 
-    private ConsultationService consultationService;
-
-
-// Créer une nouvelle consultation
-
-// Nécessite l'ID du patient et l'ID du médecin dans l'URL
-
+    // Créer une nouvelle consultation
+    // Utilise le DTO ConsultationRequest pour la réception des données
     @PostMapping("/patient/{patientId}/doctor/{doctorId}")
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'MEDECIN', 'RECEPTIONNISTE')") // Qui peut créer une consultation
-
+    @PreAuthorize("hasAuthority('CONSULTATION_WRITE')")
     public ResponseEntity<ConsultationResponseDTO> createConsultation(
-
             @PathVariable Long patientId,
-
             @PathVariable Long doctorId,
-
-            @Valid @RequestBody Consultation consultation) {
-
-        ConsultationResponseDTO createdConsultationDto = consultationService.createConsultation(patientId, doctorId, consultation);
-
+            @Valid @RequestBody ConsultationRequest consultationRequest) {
+        ConsultationResponseDTO createdConsultationDto = consultationService.createConsultation(patientId, doctorId, consultationRequest);
         return new ResponseEntity<>(createdConsultationDto, HttpStatus.CREATED);
-
     }
 
-
-// Récupérer une consultation par son ID
-
+    // Récupérer une consultation par son ID
     @GetMapping("/{id}")
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'MEDECIN', 'INFIRMIER', 'RECEPTIONNISTE')")
-
-// Qui peut consulter une consultation spécifique
-
+    @PreAuthorize("hasAuthority('CONSULTATION_READ')")
     public ResponseEntity<ConsultationResponseDTO> getConsultationById(@PathVariable Long id) {
-
         ConsultationResponseDTO consultationDto = consultationService.getConsultationById(id);
-
         return ResponseEntity.ok(consultationDto);
-
     }
 
-
-// Récupérer toutes les consultations
-
+    // Récupérer toutes les consultations
     @GetMapping
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'MEDECIN', 'INFIRMIER', 'RECEPTIONNISTE')")
-
-// Qui peut consulter toutes les consultations
-
+    @PreAuthorize("hasAuthority('CONSULTATION_READ')")
     public ResponseEntity<List<ConsultationResponseDTO>> getAllConsultations() {
-
         List<ConsultationResponseDTO> consultationsDto = consultationService.getAllConsultations();
-
         return ResponseEntity.ok(consultationsDto);
-
     }
 
-
-// Récupérer les consultations d'un patient spécifique
-
+    // Récupérer les consultations d'un patient spécifique
     @GetMapping("/patient/{patientId}")
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'MEDECIN', 'INFIRMIER', 'RECEPTIONNISTE')")
-
+    @PreAuthorize("hasAuthority('CONSULTATION_READ')")
     public ResponseEntity<List<ConsultationResponseDTO>> getConsultationsByPatient(@PathVariable Long patientId) {
-
         List<ConsultationResponseDTO> consultationsDto = consultationService.getConsultationsByPatient(patientId);
-
         return ResponseEntity.ok(consultationsDto);
-
     }
 
-
-// Récupérer les consultations d'un médecin spécifique
-
+    // Récupérer les consultations d'un médecin spécifique
     @GetMapping("/doctor/{doctorId}")
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'MEDECIN', 'RECEPTIONNISTE')") // Les médecins peuvent voir leurs consultations
-
+    @PreAuthorize("hasAuthority('CONSULTATION_READ')")
     public ResponseEntity<List<ConsultationResponseDTO>> getConsultationsByDoctor(@PathVariable Long doctorId) {
-
         List<ConsultationResponseDTO> consultationsDto = consultationService.getConsultationsByDoctor(doctorId);
-
         return ResponseEntity.ok(consultationsDto);
-
     }
 
-
-// Mettre à jour une consultation existante
-
+    // Mettre à jour une consultation existante
+    // Utilise le DTO ConsultationRequest pour la mise à jour
     @PutMapping("/{id}")
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'MEDECIN')") // Seuls l'Admin et les Médecins peuvent modifier les consultations
-
-    public ResponseEntity<ConsultationResponseDTO> updateConsultation(@PathVariable Long id, @Valid @RequestBody Consultation consultationDetails) {
-
-        ConsultationResponseDTO updatedConsultationDto = consultationService.updateConsultation(id, consultationDetails);
-
+    @PreAuthorize("hasAuthority('CONSULTATION_WRITE')")
+    public ResponseEntity<ConsultationResponseDTO> updateConsultation(
+            @PathVariable Long id,
+            @Valid @RequestBody ConsultationRequest consultationRequest) {
+        ConsultationResponseDTO updatedConsultationDto = consultationService.updateConsultation(id, consultationRequest);
         return ResponseEntity.ok(updatedConsultationDto);
-
     }
 
-
-// Supprimer une consultation
-
+    // Supprimer une consultation
     @DeleteMapping("/{id}")
-
-    @PreAuthorize("hasRole('ADMIN')") // Seul l'Admin peut supprimer une consultation
-
+    @PreAuthorize("hasAuthority('CONSULTATION_DELETE')")
     public ResponseEntity<HttpStatus> deleteConsultation(@PathVariable Long id) {
-
         consultationService.deleteConsultation(id);
-
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
-
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-
+    // Filtrer les consultations par plage de dates
     @GetMapping("/filter-by-date")
-
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MEDECIN') or hasRole('INFIRMIER') or hasRole('RECEPTIONNISTE')")
-
+    @PreAuthorize("hasAuthority('CONSULTATION_READ')")
     public ResponseEntity<List<ConsultationResponseDTO>> getConsultationsByDateRange(
-
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-
         List<ConsultationResponseDTO> consultations = consultationService.getConsultationsByDateRange(startDate, endDate);
-
         return ResponseEntity.ok(consultations);
-
     }
 
-
-// Récupérer les consultations d'un patient avec un spécifique par nom de famille
-
+    // Filtrer les consultations par nom de famille du patient
     @GetMapping("/filter-by-patient-lastname")
-
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MEDECIN') or hasRole('INFIRMIER') or hasRole('RECEPTIONNISTE')")
-
+    @PreAuthorize("hasAuthority('CONSULTATION_READ')")
     public ResponseEntity<List<ConsultationResponseDTO>> getConsultationsByPatientLastName(
-
             @RequestParam String lastName) {
-
         List<ConsultationResponseDTO> consultations = consultationService.getConsultationsByPatientLastName(lastName);
-
         return ResponseEntity.ok(consultations);
-
     }
 
-
-// Récupérer les consultations par mot-clé dans le diagnostic
-
+    // Filtrer les consultations par mot-clé dans le diagnostic
     @GetMapping("/filter-by-diagnosis")
-
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MEDECIN') or hasRole('INFIRMIER') or hasRole('RECEPTIONNISTE')")
-
+    @PreAuthorize("hasAuthority('CONSULTATION_READ')")
     public ResponseEntity<List<ConsultationResponseDTO>> getConsultationsByDiagnosis(
-
             @RequestParam String keyword) {
-
         List<ConsultationResponseDTO> consultations = consultationService.getConsultationsByDiagnosisKeyword(keyword);
-
         return ResponseEntity.ok(consultations);
-
     }
 
+    // Compter les consultations par médecin
+    @GetMapping("/count-by-doctor")
+    @PreAuthorize("hasAuthority('CONSULTATION_READ')")
+    public ResponseEntity<List<ConsultationCountByDoctorDTO>> countConsultationsByDoctor() {
+        List<ConsultationCountByDoctorDTO> counts = consultationService.countConsultationsByDoctor();
+        return ResponseEntity.ok(counts);
+    }
 }

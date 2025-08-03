@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,4 +45,9 @@ public class User {
         this.roles = new HashSet<>();
         this.nomComplet = null;
     }
+
+    private Integer failedAttempt = 0; // Nombre de tentatives échouées
+    private LocalDateTime lockTime; // Timestamp du verrouillage
+    private boolean accountNonLocked = true; // Indique si le compte est verrouillé
+
 }

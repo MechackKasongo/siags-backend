@@ -9,24 +9,16 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface PatientDailyRecordService {
+
     PatientDailyRecordResponseDTO createPatientDailyRecord(PatientDailyRecordRequestDTO requestDTO);
-
     PatientDailyRecordResponseDTO getPatientDailyRecordById(Long id);
-
     List<PatientDailyRecordResponseDTO> getAllPatientDailyRecords();
-
     Page<PatientDailyRecordResponseDTO> getAllPatientDailyRecordsPaginated(Pageable pageable);
-
     PatientDailyRecordResponseDTO updatePatientDailyRecord(Long id, PatientDailyRecordRequestDTO requestDTO);
 
-    void deletePatientDailyRecord(Long id);
-
-    // Méthodes de recherche spécifiques
+    void deleteDailyRecord(Long id);
     List<PatientDailyRecordResponseDTO> getPatientDailyRecordsByPatientId(Long patientId);
-
     List<PatientDailyRecordResponseDTO> getPatientDailyRecordsByRecordDate(LocalDate recordDate);
-
     List<PatientDailyRecordResponseDTO> getPatientDailyRecordsByPatientIdAndRecordDate(Long patientId, LocalDate recordDate);
-
     List<PatientDailyRecordResponseDTO> getPatientDailyRecordsByRecordedById(Long recordedById);
 }

@@ -1,21 +1,21 @@
-package com.hgs.patient.siags_backend.dto;
+package com.hgs.patient.siags_backend.payload.response;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * DTO pour la réponse de connexion réussie.
+ * Il contient le token d'authentification et les informations de l'utilisateur.
+ */
 @Data
-@NoArgsConstructor // Un constructeur sans arguments est utile pour la désérialisation
 public class JwtResponse {
     private String token;
-    private String type = "Bearer"; // Type de token
+    private String type = "Bearer";
     private Long id;
     private String username;
     private String email;
-    private List<String> roles; // Les rôles de l'utilisateur
-
-// Constructeur personnalisé pour faciliter la création de la réponse
+    private List<String> roles;
 
     public JwtResponse(String accessToken, Long id, String username, String email, List<String> roles) {
         this.token = accessToken;
@@ -23,6 +23,5 @@ public class JwtResponse {
         this.username = username;
         this.email = email;
         this.roles = roles;
-
     }
 }
