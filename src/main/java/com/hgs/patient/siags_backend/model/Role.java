@@ -25,9 +25,6 @@ public class Role {
     private ERole name;
 
     // Nouvelle relation Many-to-Many avec Permission
-    // Note : @Data de Lombok peut causer des problèmes avec toString() sur les relations bidirectionnelles
-    // si vous n'excluez pas la relation, cela peut entraîner des StackOverflowError.
-    // Vous pourriez vouloir écrire votre propre toString() ou exclure le champ permissions de toString().
     @ManyToMany(fetch = FetchType.EAGER)
     // EAGER pour que les permissions soient chargées avec le rôle (souvent nécessaire pour Spring Security)
     @JoinTable(name = "role_permissions", // Nom de la table de jointure
@@ -41,11 +38,6 @@ public class Role {
         this.name = name;
     }
 
-    // Si vous utilisez @Data, Lombok génère ces méthodes.
-    // Cependant, pour les entités JPA avec des relations, il est souvent conseillé d'implémenter equals/hashCode manuellement
-    // en se basant uniquement sur l'ID (ou une clé métier unique) pour éviter des problèmes de persistance.
-    // Le @Data de Lombok peut générer des equals/hashCode qui incluent les champs relationnels, ce qui peut causer des boucles infinies.
-    // Une solution est d'utiliser @EqualsAndHashCode.Exclude sur les champs relationnels, ou d'écrire ces méthodes manuellement.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

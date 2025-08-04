@@ -30,8 +30,14 @@ public class DataInitializer {
             PermissionRepository permissionRepository,
             RoleRepository roleRepository) {
         return args -> {
-            // ÉTAPE 1: Récupérer toutes les permissions existantes pour éviter les requêtes N+1
-            // Nous utilisons un Map pour un accès rapide par le nom de la permission
+            // ÉTAPE 1: Initialiser ou récupérer tous les rôles en premier
+            // Cela remplace la nécessité de RoleInitializer et assure que les rôles existent pour l'étape 3.
+            Map<ERole, Role> existingRolesMap = Arrays.stream(ERole.values())
+                    .map(roleName -> createOrGetRole(roleRepository, roleName))
+                    .collect(Collectors.toMap(Role::getName, Function.identity()));
+            System.out.println("Rôles initialisés ou récupérés.");
+
+            // ÉTAPE 2: Récupérer toutes les permissions existantes pour éviter les requêtes N+1
             Map<String, Permission> existingPermissionsMap = permissionRepository.findAll().stream()
                     .collect(Collectors.toMap(Permission::getName, Function.identity()));
 
@@ -74,18 +80,18 @@ public class DataInitializer {
             allPermissions.add(createOrGetPermission(permissionRepository, existingPermissionsMap, "REPORT_READ_ADMISSION", "Permet de lire les rapports liés aux admissions."));
             allPermissions.add(createOrGetPermission(permissionRepository, existingPermissionsMap, "REPORT_READ_CONSULTATION", "Permet de lire les rapports liés aux consultations."));
 
-            System.out.println("Permissions initialisées ou récupérées.");
+            // Nouvelle permission ATTACHMENT_READ et ATTACHMENT_WRITE
+            allPermissions.add(createOrGetPermission(permissionRepository, existingPermissionsMap, "ATTACHMENT_READ", "Permet de lire les pièces jointes."));
+            allPermissions.add(createOrGetPermission(permissionRepository, existingPermissionsMap, "ATTACHMENT_WRITE", "Permet d'ajouter et modifier les pièces jointes."));
+            allPermissions.add(createOrGetPermission(permissionRepository, existingPermissionsMap, "ATTACHMENT_DELETE", "Permet de supprimer les pièces jointes."));
 
-            // ÉTAPE 2: Créer ou récupérer tous les rôles en une seule requête
-            Map<ERole, Role> existingRolesMap = Arrays.stream(ERole.values())
-                    .map(roleName -> roleRepository.findByName(roleName).orElse(roleRepository.save(new Role(roleName))))
-                    .collect(Collectors.toMap(Role::getName, Function.identity()));
+
+            System.out.println("Permissions initialisées ou récupérées.");
 
             // ÉTAPE 3: Association des Permissions aux Rôles
             System.out.println("Association des permissions aux rôles...");
 
             // Rôle ADMIN
-            // Assigner toutes les permissions à l'administrateur, y compris la nouvelle
             updateRolePermissions(existingRolesMap.get(ERole.ROLE_ADMIN), allPermissions, roleRepository);
 
             // Rôle RECEPTIONNISTE
@@ -95,7 +101,8 @@ public class DataInitializer {
                     existingPermissionsMap.get("CONSULTATION_READ"), existingPermissionsMap.get("DEPARTMENT_READ"),
                     existingPermissionsMap.get("DAILY_RECORD_READ"), existingPermissionsMap.get("REPORT_READ_PATIENT"),
                     existingPermissionsMap.get("REPORT_READ_ADMISSION"), existingPermissionsMap.get("REPORT_READ_CONSULTATION"),
-                    existingPermissionsMap.get("MEDICAL_RECORD_READ")
+                    existingPermissionsMap.get("MEDICAL_RECORD_READ"),
+                    existingPermissionsMap.get("ATTACHMENT_READ"), existingPermissionsMap.get("ATTACHMENT_WRITE") // Ajout des permissions d'attachement
             ));
             updateRolePermissions(existingRolesMap.get(ERole.ROLE_RECEPTIONNISTE), receptionistPermissions, roleRepository);
 
@@ -105,7 +112,8 @@ public class DataInitializer {
                     existingPermissionsMap.get("DAILY_RECORD_WRITE"), existingPermissionsMap.get("CONSULTATION_READ"),
                     existingPermissionsMap.get("CONSULTATION_WRITE"), existingPermissionsMap.get("ADMISSION_READ"),
                     existingPermissionsMap.get("DEPARTMENT_READ"), existingPermissionsMap.get("REPORT_READ_CONSULTATION"),
-                    existingPermissionsMap.get("MEDICAL_RECORD_READ"), existingPermissionsMap.get("MEDICAL_RECORD_WRITE")
+                    existingPermissionsMap.get("MEDICAL_RECORD_READ"), existingPermissionsMap.get("MEDICAL_RECORD_WRITE"),
+                    existingPermissionsMap.get("ATTACHMENT_READ"), existingPermissionsMap.get("ATTACHMENT_WRITE") // Ajout des permissions d'attachement
             ));
             updateRolePermissions(existingRolesMap.get(ERole.ROLE_MEDECIN), medecinPermissions, roleRepository);
 
@@ -116,19 +124,38 @@ public class DataInitializer {
                     existingPermissionsMap.get("CONSULTATION_READ"), existingPermissionsMap.get("DEPARTMENT_READ"),
                     existingPermissionsMap.get("REPORT_READ_PATIENT"), existingPermissionsMap.get("REPORT_READ_ADMISSION"),
                     existingPermissionsMap.get("REPORT_READ_CONSULTATION"),
-                    existingPermissionsMap.get("MEDICAL_RECORD_READ")
+                    existingPermissionsMap.get("MEDICAL_RECORD_READ"),
+                    existingPermissionsMap.get("ATTACHMENT_READ"), existingPermissionsMap.get("ATTACHMENT_WRITE") // Ajout des permissions d'attachement
             ));
             updateRolePermissions(existingRolesMap.get(ERole.ROLE_INFIRMIER), infirmierPermissions, roleRepository);
 
             // Rôle PERSONNEL_ADMIN_SORTIE
             Set<Permission> personnelAdminSortiePermissions = new HashSet<>(Arrays.asList(
                     existingPermissionsMap.get("PATIENT_READ"), existingPermissionsMap.get("ADMISSION_READ"),
-                    existingPermissionsMap.get("ADMISSION_DISCHARGE")
+                    existingPermissionsMap.get("ADMISSION_DISCHARGE"),
+                    existingPermissionsMap.get("ATTACHMENT_READ") // Ils peuvent lire les attachements liés aux dossiers de sortie
             ));
             updateRolePermissions(existingRolesMap.get(ERole.ROLE_PERSONNEL_ADMIN_SORTIE), personnelAdminSortiePermissions, roleRepository);
 
             System.out.println("Association des permissions aux rôles terminée.");
         };
+    }
+
+    /**
+     * Crée ou récupère un rôle de manière sécurisée en vérifiant d'abord son existence.
+     *
+     * @param roleRepository Le repository de rôles.
+     * @param roleName       Le nom du rôle à créer ou récupérer.
+     * @return Le rôle existant ou nouvellement créé.
+     */
+    private Role createOrGetRole(RoleRepository roleRepository, ERole roleName) {
+        return roleRepository.findByName(roleName)
+                .orElseGet(() -> {
+                    Role newRole = new Role(roleName);
+                    roleRepository.save(newRole);
+                    System.out.println("Rôle " + roleName.name() + " créé dans la base de données.");
+                    return newRole;
+                });
     }
 
     /**

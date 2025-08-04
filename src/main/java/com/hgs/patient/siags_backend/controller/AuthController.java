@@ -8,11 +8,12 @@ import com.hgs.patient.siags_backend.model.Role;
 import com.hgs.patient.siags_backend.model.User;
 import com.hgs.patient.siags_backend.repository.RoleRepository;
 import com.hgs.patient.siags_backend.repository.UserRepository;
-import com.hgs.patient.siags_backend.security.jwt.JwtUtils; // Déjà là
-import com.hgs.patient.siags_backend.security.services.UserDetailsImpl; // <<< AJOUTEZ CETTE LIGNE
+import com.hgs.patient.siags_backend.security.jwt.JwtUtils;
+import com.hgs.patient.siags_backend.security.services.UserDetailsImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,7 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -78,6 +79,16 @@ public class AuthController {
                 userDetails.getEmail(),
                 roles));
 
+    }
+
+    @GetMapping("/roles")
+    @PreAuthorize("hasRole('ADMIN')") // Seuls les admins peuvent voir la liste des rôles
+    public ResponseEntity<?> getAvailableRoles() {
+        // Cette liste devrait venir de ta base de données ou d'une constante
+        List<String> roles = Arrays.asList("ROLE_ADMIN", "ROLE_RECEPTIONIST", "ROLE_DOCTOR", "ROLE_PATIENT"); // Exemple
+        // Ou si tu as un service de rôle qui récupère tous les noms de rôles :
+        // List<String> roles = roleService.getAllRoleNames();
+        return ResponseEntity.ok(roles);
     }
 
 

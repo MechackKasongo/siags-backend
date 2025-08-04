@@ -17,8 +17,9 @@ public class PatientController {
         this.patientService = patientService;
     }
 
-    @PostMapping
+
     // Qui peut créer un patient (ex: Receptionniste, Admin)
+    @PostMapping
     @PreAuthorize("hasAuthority('PATIENT_WRITE')")
     public ResponseEntity<Patient> createPatient(@RequestBody Patient patient) {
         Patient createdPatient = patientService.createPatient(patient);
@@ -26,7 +27,7 @@ public class PatientController {
     }
 
     @GetMapping("/{id}")
-    // Qui peut lire les informations d'un patient (ex: Receptionniste, Medecin, Infirmier, Admin)
+    //Qui peut lire les informations d'un patient (ex: Receptionniste, Medecin, Infirmier, Admin)
     @PreAuthorize("hasAuthority('PATIENT_READ')")
     public ResponseEntity<Patient> getPatientById(@PathVariable Long id) {
         return patientService.getPatientById(id)

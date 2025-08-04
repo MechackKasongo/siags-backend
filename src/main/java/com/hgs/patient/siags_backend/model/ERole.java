@@ -1,9 +1,9 @@
-package com.hgs.patient.siags_backend.model;
+package com.hgs.patient.siags_backend.model; // Vérifiez le package exact
 
 public enum ERole {
     ROLE_ADMIN,
-    ROLE_RECEPTIONNISTE,
-    ROLE_MEDECIN,
     ROLE_INFIRMIER,
-    ROLE_PERSONNEL_ADMIN_SORTIE // Ajoutez d'autres rôles si nécessaire
+    ROLE_MEDECIN,
+    ROLE_PERSONNEL_ADMIN_SORTIE,
+    ROLE_RECEPTIONNISTE
 }

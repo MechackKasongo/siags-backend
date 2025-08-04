@@ -14,6 +14,8 @@ public class JwtResponse {
     private String username;
     private String email;
     private List<String> roles; // Les rôles de l'utilisateur
+    private List<String> permissions;
+
 
 // Constructeur personnalisé pour faciliter la création de la réponse
 

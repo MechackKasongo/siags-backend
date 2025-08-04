@@ -1,5 +1,4 @@
-
-package com.hgs.patient.siags_backend.service.impl;
+package com.hgs.patient.siags_backend.service.imp;
 
 import com.hgs.patient.siags_backend.dto.UserCreateRequest;
 import com.hgs.patient.siags_backend.dto.UserResponseDTO;
@@ -32,7 +31,6 @@ public class UserServiceImp implements UserService {
     private final ModelMapper modelMapper;
 
     @Autowired
-
     public UserServiceImp(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, ModelMapper modelMapper) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -42,7 +40,6 @@ public class UserServiceImp implements UserService {
 
     @Override
     public UserResponseDTO createUser(UserCreateRequest userCreateRequest) {
-
         if (userRepository.existsByUsername(userCreateRequest.getUsername())) {
             throw new IllegalArgumentException("Erreur: Le nom d'utilisateur est déjà pris!");
         }
@@ -62,21 +59,19 @@ public class UserServiceImp implements UserService {
         Set<Role> roles = new HashSet<>();
 
         if (strRoles == null || strRoles.isEmpty()) {
-
-            // Rôle par défaut si aucun n'est spécifié, par exemple RECEPTIONNISTE
             Role defaultRole = roleRepository.findByName(ERole.ROLE_RECEPTIONNISTE)
                     .orElseThrow(() -> new RuntimeException("Erreur: Le rôle RECEPTIONNISTE n'est pas trouvé."));
             roles.add(defaultRole);
-
         } else {
             strRoles.forEach(roleName -> {
                 try {
-                    ERole eRole = ERole.valueOf("ROLE_" + roleName.toUpperCase());
+                    // CORRECTION ICI : Enlève le préfixe "ROLE_" car le frontend l'envoie déjà
+                    ERole eRole = ERole.valueOf(roleName.toUpperCase());
                     Role role = roleRepository.findByName(eRole)
                             .orElseThrow(() -> new RuntimeException("Erreur: Le rôle " + roleName + " n'est pas trouvé."));
                     roles.add(role);
                 } catch (IllegalArgumentException e) {
-                    throw new RuntimeException("Erreur: Rôle '" + roleName + "' inconnu.");
+                    throw new RuntimeException("Erreur: Rôle '" + roleName + "' inconnu. Détail: " + e.getMessage()); // Ajout du détail de l'erreur
                 }
             });
         }
@@ -119,7 +114,8 @@ public class UserServiceImp implements UserService {
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'ID: " + id));
 
         // Mettre à jour l'email si fourni et si différent de l'existant, en vérifiant l'unicité
-        if (userUpdateRequest.getEmail() != null && !userUpdateRequest.getEmail().equals(existingUser.getEmail())) {
+        if (userUpdateRequest.getEmail() != null && !userUpdateRequest.getEmail().isEmpty() &&
+                !userUpdateRequest.getEmail().equals(existingUser.getEmail())) {
             if (userRepository.existsByEmail(userUpdateRequest.getEmail())) {
                 throw new IllegalArgumentException("Erreur: L'email '" + userUpdateRequest.getEmail() + "' est déjà utilisé par un autre utilisateur!");
             }
@@ -131,33 +127,28 @@ public class UserServiceImp implements UserService {
             existingUser.setPassword(passwordEncoder.encode(userUpdateRequest.getPassword()));
         }
 
-        // Mettre à jour le nom complet
-        if (userUpdateRequest.getNomComplet() != null) {
+        // Mettre à jour le nom complet (si tu l'as dans ton User)
+        if (userUpdateRequest.getNomComplet() != null && !userUpdateRequest.getNomComplet().isEmpty()) {
             existingUser.setNomComplet(userUpdateRequest.getNomComplet());
         }
 
         // Mettre à jour les rôles si fournis
-        if (userUpdateRequest.getRoles() != null && !userUpdateRequest.getRoles().isEmpty()) {
+        if (userUpdateRequest.getRoles() != null) {
             Set<Role> newRoles = new HashSet<>();
-            userUpdateRequest.getRoles().forEach(roleName -> {
-                try {
-                    ERole eRole = ERole.valueOf("ROLE_" + roleName.toUpperCase());
-                    Role role = roleRepository.findByName(eRole)
-                            .orElseThrow(() -> new RuntimeException("Erreur: Le rôle " + roleName + " n'est pas trouvé."));
-                    newRoles.add(role);
-
-                } catch (IllegalArgumentException e) {
-                    throw new RuntimeException("Erreur: Rôle '" + roleName + "' inconnu.");
-                }
-            });
-
+            if (!userUpdateRequest.getRoles().isEmpty()) {
+                userUpdateRequest.getRoles().forEach(roleName -> {
+                    try {
+                        // CORRECTION ICI : Enlève le préfixe "ROLE_" car le frontend l'envoie déjà
+                        ERole eRole = ERole.valueOf(roleName.toUpperCase());
+                        Role role = roleRepository.findByName(eRole)
+                                .orElseThrow(() -> new RuntimeException("Erreur: Le rôle " + roleName + " n'est pas trouvé."));
+                        newRoles.add(role);
+                    } catch (IllegalArgumentException e) {
+                        throw new RuntimeException("Erreur: Rôle '" + roleName + "' inconnu. Détail: " + e.getMessage()); // Ajout du détail de l'erreur
+                    }
+                });
+            }
             existingUser.setRoles(newRoles);
-        } else if (userUpdateRequest.getRoles() != null && userUpdateRequest.getRoles().isEmpty()) {
-
-            // Si une liste de rôles vide est envoyée, retirer tous les rôles (attention à ne pas bloquer l'admin!)
-            // Pour l'admin, on peut exiger qu'il ait toujours le rôle ADMIN pour éviter de se verrouiller.
-            // Pour l'instant, on permet de retirer tous les rôles. Vous pouvez ajouter une logique spécifique ici.
-            existingUser.setRoles(new HashSet<>());
         }
 
         User updatedUser = userRepository.save(existingUser);
