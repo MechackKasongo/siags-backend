@@ -16,9 +16,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-//@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/admissions")
+@PreAuthorize("hasRole('ROLE_ADMIN')") // Le rôle Admin peut faire toutes les actions d'admission
 public class AdmissionController {
 
     private final AdmissionService admissionService;
@@ -29,7 +30,6 @@ public class AdmissionController {
     }
 
     // --- Créer une nouvelle admission ---
-    // Seuls les utilisateurs avec la permission ADMISSION_WRITE peuvent créer une admission
     @PostMapping
     @PreAuthorize("hasAuthority('ADMISSION_WRITE')")
     public ResponseEntity<AdmissionResponseDTO> createAdmission(@Valid @RequestBody AdmissionRequestDTO admissionRequestDTO) {
@@ -38,7 +38,6 @@ public class AdmissionController {
     }
 
     // --- Récupérer une admission par ID ---
-    // Tous les rôles pertinents qui ont ADMISSION_READ peuvent consulter les admissions
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMISSION_READ')")
     public ResponseEntity<AdmissionResponseDTO> getAdmissionById(@PathVariable Long id) {
@@ -47,7 +46,6 @@ public class AdmissionController {
     }
 
     // --- Récupérer toutes les admissions (avec ou sans pagination) ---
-    // Tous les rôles pertinents qui ont ADMISSION_READ peuvent consulter les admissions
     @GetMapping
     @PreAuthorize("hasAuthority('ADMISSION_READ')")
     public ResponseEntity<?> getAllAdmissions(
@@ -71,7 +69,6 @@ public class AdmissionController {
     }
 
     // --- Récupérer les admissions par ID Patient ---
-    // Tous les rôles pertinents qui ont ADMISSION_READ peuvent consulter les admissions d'un patient
     @GetMapping("/patient/{patientId}")
     @PreAuthorize("hasAuthority('ADMISSION_READ')")
     public ResponseEntity<List<AdmissionResponseDTO>> getAdmissionsByPatientId(@PathVariable Long patientId) {
@@ -80,7 +77,6 @@ public class AdmissionController {
     }
 
     // --- Mettre à jour une admission existante ---
-    // Les utilisateurs ayant ADMISSION_WRITE peuvent modifier
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMISSION_WRITE')")
     public ResponseEntity<AdmissionResponseDTO> updateAdmission(@PathVariable Long id, @Valid @RequestBody AdmissionRequestDTO admissionRequestDTO) {
@@ -89,8 +85,6 @@ public class AdmissionController {
     }
 
     // --- Supprimer une admission ---
-    // Seuls les utilisateurs ayant ADMISSION_DELETE (ou ADMISSION_WRITE si c'est combiné) peuvent supprimer
-    // J'assume ici une permission spécifique ADMISSION_DELETE
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMISSION_DELETE')")
     public ResponseEntity<HttpStatus> deleteAdmission(@PathVariable Long id) {

@@ -58,4 +58,10 @@ public class PatientController {
         patientService.deletePatient(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    // Endpoint de test pour vérifier le mapping du contrôleur
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("Patient API is reachable");
+    }
 }

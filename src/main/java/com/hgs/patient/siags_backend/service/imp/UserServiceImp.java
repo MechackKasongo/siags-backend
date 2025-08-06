@@ -3,19 +3,20 @@ package com.hgs.patient.siags_backend.service.imp;
 import com.hgs.patient.siags_backend.dto.UserCreateRequest;
 import com.hgs.patient.siags_backend.dto.UserResponseDTO;
 import com.hgs.patient.siags_backend.dto.UserUpdateRequest;
+import com.hgs.patient.siags_backend.exception.ResourceNotFoundException;
 import com.hgs.patient.siags_backend.model.ERole;
 import com.hgs.patient.siags_backend.model.Role;
 import com.hgs.patient.siags_backend.model.User;
 import com.hgs.patient.siags_backend.repository.RoleRepository;
 import com.hgs.patient.siags_backend.repository.UserRepository;
 import com.hgs.patient.siags_backend.service.UserService;
-import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -65,13 +66,12 @@ public class UserServiceImp implements UserService {
         } else {
             strRoles.forEach(roleName -> {
                 try {
-                    // CORRECTION ICI : Enlève le préfixe "ROLE_" car le frontend l'envoie déjà
                     ERole eRole = ERole.valueOf(roleName.toUpperCase());
                     Role role = roleRepository.findByName(eRole)
-                            .orElseThrow(() -> new RuntimeException("Erreur: Le rôle " + roleName + " n'est pas trouvé."));
+                            .orElseThrow(() -> new ResourceNotFoundException("Erreur: Le rôle " + roleName + " n'est pas trouvé."));
                     roles.add(role);
                 } catch (IllegalArgumentException e) {
-                    throw new RuntimeException("Erreur: Rôle '" + roleName + "' inconnu. Détail: " + e.getMessage()); // Ajout du détail de l'erreur
+                    throw new RuntimeException("Erreur: Rôle '" + roleName + "' inconnu. Détail: " + e.getMessage());
                 }
             });
         }
@@ -84,14 +84,14 @@ public class UserServiceImp implements UserService {
     @Override
     public UserResponseDTO getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'ID: " + id));
         return convertUserToUserResponseDTO(user);
     }
 
     @Override
     public UserResponseDTO getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec le nom d'utilisateur: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec le nom d'utilisateur: " + username));
         return convertUserToUserResponseDTO(user);
     }
 
@@ -109,11 +109,11 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponseDTO updateUser(Long id, UserUpdateRequest userUpdateRequest) {
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'ID: " + id));
 
-        // Mettre à jour l'email si fourni et si différent de l'existant, en vérifiant l'unicité
         if (userUpdateRequest.getEmail() != null && !userUpdateRequest.getEmail().isEmpty() &&
                 !userUpdateRequest.getEmail().equals(existingUser.getEmail())) {
             if (userRepository.existsByEmail(userUpdateRequest.getEmail())) {
@@ -122,29 +122,25 @@ public class UserServiceImp implements UserService {
             existingUser.setEmail(userUpdateRequest.getEmail());
         }
 
-        // Mettre à jour le mot de passe si fourni
         if (userUpdateRequest.getPassword() != null && !userUpdateRequest.getPassword().isEmpty()) {
             existingUser.setPassword(passwordEncoder.encode(userUpdateRequest.getPassword()));
         }
 
-        // Mettre à jour le nom complet (si tu l'as dans ton User)
         if (userUpdateRequest.getNomComplet() != null && !userUpdateRequest.getNomComplet().isEmpty()) {
             existingUser.setNomComplet(userUpdateRequest.getNomComplet());
         }
 
-        // Mettre à jour les rôles si fournis
         if (userUpdateRequest.getRoles() != null) {
             Set<Role> newRoles = new HashSet<>();
             if (!userUpdateRequest.getRoles().isEmpty()) {
                 userUpdateRequest.getRoles().forEach(roleName -> {
                     try {
-                        // CORRECTION ICI : Enlève le préfixe "ROLE_" car le frontend l'envoie déjà
                         ERole eRole = ERole.valueOf(roleName.toUpperCase());
                         Role role = roleRepository.findByName(eRole)
-                                .orElseThrow(() -> new RuntimeException("Erreur: Le rôle " + roleName + " n'est pas trouvé."));
+                                .orElseThrow(() -> new ResourceNotFoundException("Erreur: Le rôle " + roleName + " n'est pas trouvé."));
                         newRoles.add(role);
                     } catch (IllegalArgumentException e) {
-                        throw new RuntimeException("Erreur: Rôle '" + roleName + "' inconnu. Détail: " + e.getMessage()); // Ajout du détail de l'erreur
+                        throw new RuntimeException("Erreur: Rôle '" + roleName + "' inconnu. Détail: " + e.getMessage());
                     }
                 });
             }
@@ -158,19 +154,29 @@ public class UserServiceImp implements UserService {
     @Override
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new EntityNotFoundException("Utilisateur non trouvé avec l'ID: " + id);
+            throw new ResourceNotFoundException("Utilisateur non trouvé avec l'ID: " + id);
         }
         userRepository.deleteById(id);
     }
 
-    // Méthode utilitaire pour convertir un User en UserResponseDTO
+
+// Dans votre fichier UserServiceImp.java
+
     private UserResponseDTO convertUserToUserResponseDTO(User user) {
         UserResponseDTO dto = modelMapper.map(user, UserResponseDTO.class);
 
-        // Map les noms des rôles manuellement, car ModelMapper peut avoir du mal avec Set<Role> -> List<String>
-        dto.setRoles(user.getRoles().stream()
-                .map(role -> role.getName().name()) // Convertit ERole en String (ex: "ROLE_ADMIN")
-                .collect(Collectors.toList()));
+        // CORRECTION ICI : Changer Collectors.toList() en Collectors.toSet()
+        dto.setRoles((List<String>) user.getRoles().stream()
+                .map(role -> role.getName().name())
+                .collect(Collectors.toSet()));
+
+        // Le reste du code est correct
+        Set<String> permissions = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(permission -> permission.getName())
+                .collect(Collectors.toSet());
+        dto.setPermissions(permissions);
+
         return dto;
     }
 }

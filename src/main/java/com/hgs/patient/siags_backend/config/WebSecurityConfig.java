@@ -6,6 +6,7 @@ import com.hgs.patient.siags_backend.security.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -58,57 +59,50 @@ public class WebSecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
-    // NOUVEAU BEAN POUR LA CONFIGURATION CORS
+    // Configuration CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // C'est ici que vous spécifiez les origines autorisées de votre frontend React.
-        // Assurez-vous que l'URL est correcte (par exemple, http://localhost:5173 pour Vite, ou http://localhost:3000 pour create-react-app)
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000", "http://votre-domaine-production.com"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("*")); // Permet tous les en-têtes
-        configuration.setAllowCredentials(true); // Autorise l'envoi de cookies/en-têtes d'authentification (comme les tokens JWT)
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Applique cette configuration à tous les chemins (/**)
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http.csrf(AbstractHttpConfigurer::disable)
-//                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authorizeHttpRequests(auth ->
-//                        auth.requestMatchers("/api/v1/auth/**").permitAll()
-//                                .requestMatchers("/api/test/**").permitAll()
-//                                // Placez cette ligne plus spécificque avant anyRequest()
-//                                .requestMatchers("/api/patients/**").authenticated() // <--- ASSUREZ-VOUS QU'ELLE EST ICI
-//                                .anyRequest().authenticated()
-//                )
-//                .authenticationProvider(authenticationProvider())
-//                .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class)
-//                .cors(Customizer.withDefaults());
-//
-//        return http.build();
-//    }
-
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable) // <-- GARDER CETTE LIGNE
+        http.csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/v1/auth/**").permitAll()
+                        auth
+                                // 1. Endpoints publics (authentification, inscription, etc.)
+                                .requestMatchers("/api/auth/**").permitAll() // <-- CHANGEMENT : Rendre /api/auth/** accessible
+                                .requestMatchers("/api/v1/auth/**").permitAll() // Ancienne règle conservée si besoin
                                 .requestMatchers("/api/test/**").permitAll()
-                                .requestMatchers("/api/patients/**").authenticated() // Cette ligne est correcte
+
+                                // 2. Permettre les requêtes CORS pre-flight pour tous les endpoints API
+                                .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
+
+                                // 3. Endpoints protégés (doivent être authentifiés)
+                                .requestMatchers("/api/patients/**").authenticated()
+                                .requestMatchers("/api/daily-records/**").authenticated()
+                                .requestMatchers("/api/audit-logs/**").authenticated()
+                                .requestMatchers("/api/v1/users/**").authenticated()
+                                // ...autres endpoints REST ici si besoin...
+
+                                // 4. Règle fourre-tout pour toutes les autres requêtes.
                                 .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class)
-                .cors(Customizer.withDefaults()); // Conserver la configuration CORS
+                .cors(Customizer.withDefaults());
 
         return http.build();
     }
 }
+
+

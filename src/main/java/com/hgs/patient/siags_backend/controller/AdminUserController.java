@@ -17,11 +17,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-//@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/admin/users")
-// La permission générique ADMIN_USER_MANAGEMENT pourrait être utilisée ici si toutes les actions étaient toujours groupées
-// @PreAuthorize("hasAuthority('ADMIN_USER_MANAGEMENT')")
+@PreAuthorize("hasRole('ROLE_ADMIN')")
 public class AdminUserController {
 
     private final UserService userService;
@@ -31,36 +30,28 @@ public class AdminUserController {
         this.userService = userService;
     }
 
-    // --- Créer un nouvel utilisateur par l'Admin ---
     @PostMapping
-    // Seul un utilisateur ayant la permission USER_WRITE (ou USER_CREATE) peut créer un utilisateur
     @PreAuthorize("hasAuthority('USER_WRITE')")
     public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserCreateRequest userCreateRequest) {
         UserResponseDTO newUser = userService.createUser(userCreateRequest);
         return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
 
-    // --- Récupérer un utilisateur par ID ---
     @GetMapping("/{id}")
-    // Seul un utilisateur ayant la permission USER_READ peut lire les informations d'un utilisateur
     @PreAuthorize("hasAuthority('USER_READ')")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
         UserResponseDTO user = userService.getUserById(id);
         return ResponseEntity.ok(user);
     }
 
-    // --- Récupérer un utilisateur par Username ---
     @GetMapping("/username/{username}")
-    // Seul un utilisateur ayant la permission USER_READ peut lire les informations d'un utilisateur
     @PreAuthorize("hasAuthority('USER_READ')")
     public ResponseEntity<UserResponseDTO> getUserByUsername(@PathVariable String username) {
         UserResponseDTO user = userService.getUserByUsername(username);
         return ResponseEntity.ok(user);
     }
 
-    // --- Récupérer tous les utilisateurs (avec ou sans pagination) ---
     @GetMapping
-    // Seul un utilisateur ayant la permission USER_READ peut lister les utilisateurs
     @PreAuthorize("hasAuthority('USER_READ')")
     public ResponseEntity<?> getAllUsers(
             @RequestParam(required = false) Integer page,
@@ -82,18 +73,14 @@ public class AdminUserController {
         }
     }
 
-    // --- Mettre à jour un utilisateur existant ---
     @PutMapping("/{id}")
-    // Seul un utilisateur ayant la permission USER_WRITE peut mettre à jour un utilisateur
     @PreAuthorize("hasAuthority('USER_WRITE')")
     public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest userUpdateRequest) {
         UserResponseDTO updatedUser = userService.updateUser(id, userUpdateRequest);
         return ResponseEntity.ok(updatedUser);
     }
 
-    // --- Supprimer un utilisateur ---
     @DeleteMapping("/{id}")
-    // Seul un utilisateur ayant la permission USER_DELETE peut supprimer un utilisateur
     @PreAuthorize("hasAuthority('USER_DELETE')")
     public ResponseEntity<HttpStatus> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);

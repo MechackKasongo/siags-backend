@@ -4,19 +4,16 @@ import com.hgs.patient.siags_backend.dto.*;
 import com.hgs.patient.siags_backend.repository.AdmissionRepository;
 import com.hgs.patient.siags_backend.repository.ConsultationRepository;
 import com.hgs.patient.siags_backend.repository.PatientRepository;
+import com.hgs.patient.siags_backend.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.hgs.patient.siags_backend.service.ReportService;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
-@Transactional(readOnly = true) // Les opérations de rapport sont généralement en lecture seule
+@Transactional(readOnly = true)
 public class ReportServiceImp implements ReportService {
 
     private final PatientRepository patientRepository;
@@ -31,12 +28,11 @@ public class ReportServiceImp implements ReportService {
         this.admissionRepository = admissionRepository;
         this.consultationRepository = consultationRepository;
     }
-
     // --- Rapports sur les patients ---
 
     @Override
     public Long getTotalPatientsCount() {
-        return patientRepository.count(); // Méthode count() est fournie par JpaRepository
+        return patientRepository.count();
     }
 
     @Override
@@ -63,7 +59,6 @@ public class ReportServiceImp implements ReportService {
 
     @Override
     public List<MonthlyAdmissionCountDTO> getMonthlyAdmissionCountForYear(int year) {
-        // CORRECTION ICI : Changer le nom de la méthode pour correspondre à celle du AdmissionRepository
         return admissionRepository.countAdmissionsByMonth(year);
     }
 
