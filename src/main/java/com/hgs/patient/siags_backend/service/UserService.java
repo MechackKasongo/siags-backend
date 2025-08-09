@@ -12,8 +12,12 @@ public interface UserService {
     UserResponseDTO createUser(UserCreateRequest userCreateRequest);
     UserResponseDTO getUserById(Long id);
     UserResponseDTO getUserByUsername(String username);
-    List<UserResponseDTO> getAllUsers();
-    Page<UserResponseDTO> getAllUsersPaginated(Pageable pageable);
+
+
+    List<UserResponseDTO> getAllUsers(String searchTerm);
+
+    Page<UserResponseDTO> getAllUsersPaginated(Pageable pageable, String searchTerm);
+
     UserResponseDTO updateUser(Long id, UserUpdateRequest userUpdateRequest);
     void deleteUser(Long id);
 }

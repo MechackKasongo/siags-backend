@@ -5,8 +5,6 @@ import com.hgs.patient.siags_backend.dto.AdmissionResponseDTO;
 import com.hgs.patient.siags_backend.dto.DepartmentSummaryDTO;
 import com.hgs.patient.siags_backend.dto.PatientSummaryDTO;
 import com.hgs.patient.siags_backend.exception.ResourceNotFoundException;
-import com.hgs.patient.siags_backend.exception.OdooIntegrationException;
-
 import com.hgs.patient.siags_backend.model.Admission;
 import com.hgs.patient.siags_backend.model.Department;
 import com.hgs.patient.siags_backend.model.Patient;
@@ -14,8 +12,6 @@ import com.hgs.patient.siags_backend.repository.AdmissionRepository;
 import com.hgs.patient.siags_backend.repository.DepartmentRepository;
 import com.hgs.patient.siags_backend.repository.PatientRepository;
 import com.hgs.patient.siags_backend.service.AdmissionService;
-import com.hgs.patient.siags_backend.service.OdooService;
-
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,7 +24,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -38,19 +33,23 @@ public class AdmissionServiceImp implements AdmissionService {
     private final PatientRepository patientRepository;
     private final DepartmentRepository departmentRepository;
     private final ModelMapper modelMapper;
-    private final OdooService odooService;
+    // Removed the OdooService field.
+    // private final OdooService odooService;
 
     @Autowired
     public AdmissionServiceImp(AdmissionRepository admissionRepository,
                                PatientRepository patientRepository,
                                DepartmentRepository departmentRepository,
-                               ModelMapper modelMapper,
-                               OdooService odooService) {
+                               ModelMapper modelMapper
+                               // Removed OdooService from the constructor
+                               // OdooService odooService
+    ) {
         this.admissionRepository = admissionRepository;
         this.patientRepository = patientRepository;
         this.departmentRepository = departmentRepository;
         this.modelMapper = modelMapper;
-        this.odooService = odooService;
+        // Removed the assignment of OdooService.
+        // this.odooService = odooService;
     }
 
     @Override
@@ -78,7 +77,8 @@ public class AdmissionServiceImp implements AdmissionService {
 
         Admission savedAdmission = admissionRepository.save(admission);
 
-        // Synchroniser avec Odoo
+        // Synchroniser avec Odoo - This block has been removed
+        /*
         try {
             odooService.createOdooAdmission(savedAdmission);
             System.out.println("Admission " + savedAdmission.getId() + " créée localement et synchronisée avec Odoo.");
@@ -88,6 +88,7 @@ public class AdmissionServiceImp implements AdmissionService {
         } catch (Exception e) {
             System.err.println("Erreur inattendue lors de la synchronisation Odoo (création) pour l'admission " + savedAdmission.getId() + ": " + e.getMessage());
         }
+        */
 
         return modelMapper.map(savedAdmission, AdmissionResponseDTO.class);
     }
@@ -153,7 +154,8 @@ public class AdmissionServiceImp implements AdmissionService {
 
         Admission updatedAdmission = admissionRepository.save(existingAdmission);
 
-        // Synchroniser la mise à jour avec Odoo
+        // Synchroniser la mise à jour avec Odoo - This block has been removed
+        /*
         try {
             odooService.updateOdooAdmission(updatedAdmission);
             System.out.println("Admission " + updatedAdmission.getId() + " mise à jour localement et synchronisée avec Odoo.");
@@ -162,6 +164,7 @@ public class AdmissionServiceImp implements AdmissionService {
         } catch (Exception e) {
             System.err.println("Erreur inattendue lors de la synchronisation Odoo (mise à jour) pour l'admission " + updatedAdmission.getId() + ": " + e.getMessage());
         }
+        */
 
         return modelMapper.map(updatedAdmission, AdmissionResponseDTO.class);
     }
@@ -230,8 +233,7 @@ public class AdmissionServiceImp implements AdmissionService {
     // Méthodes utilitaires pour le mappage (si non géré par ModelMapper partout)
     private AdmissionResponseDTO convertToDto(Admission admission) {
         AdmissionResponseDTO dto = modelMapper.map(admission, AdmissionResponseDTO.class);
-        // Vous pouvez ajouter ici des mappages personnalisés si ModelMapper ne gère pas tout automatiquement
-        // Par exemple, si vous voulez inclure des détails sur le patient ou le département
+
         if (admission.getPatient() != null) {
             dto.setPatient(modelMapper.map(admission.getPatient(), PatientSummaryDTO.class));
         }

@@ -19,7 +19,7 @@ import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/admin/users")
+@RequestMapping("/api/v1/admin/users")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 public class AdminUserController {
 
@@ -56,6 +56,7 @@ public class AdminUserController {
     public ResponseEntity<?> getAllUsers(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String searchTerm, // AJOUT du paramètre de recherche
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String sortDir) {
 
@@ -65,10 +66,10 @@ public class AdminUserController {
                 sort = sortDir != null && sortDir.equalsIgnoreCase("DESC") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
             }
             Pageable pageable = PageRequest.of(page, size, sort);
-            Page<UserResponseDTO> usersPage = userService.getAllUsersPaginated(pageable);
+            Page<UserResponseDTO> usersPage = userService.getAllUsersPaginated(pageable, searchTerm); // MODIFICATION
             return ResponseEntity.ok(usersPage);
         } else {
-            List<UserResponseDTO> users = userService.getAllUsers();
+            List<UserResponseDTO> users = userService.getAllUsers(searchTerm); // MODIFICATION
             return ResponseEntity.ok(users);
         }
     }

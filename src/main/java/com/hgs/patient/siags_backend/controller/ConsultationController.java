@@ -22,7 +22,7 @@ import java.util.List;
  */
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/consultations")
+@RequestMapping("/api/v1/consultations")
 public class ConsultationController {
 
     private final ConsultationService consultationService;

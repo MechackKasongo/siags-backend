@@ -95,7 +95,7 @@ public class AuthController {
     @PostMapping("/signup") // Endpoint pour l'inscription
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 
-// 1. Vérifier si le nom d'utilisateur existe déjà
+        // 1. Vérifier si le nom d'utilisateur existe déjà
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity
                     .badRequest()
@@ -103,16 +103,15 @@ public class AuthController {
         }
 
 
-// 1. Vérifier sil'email existe déjà (si vous gérez l'email dans User)
-// 2. Vérifier si l'email existe déjà (si vous gérez l'email dans User)
-// if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-// return ResponseEntity
-// .badRequest()
-// .body("Erreur : L'email est déjà utilisé !");
-// }
+        // 2. Vérifier si l'email existe déjà (si vous gérez l'email dans User)
+        // if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+        // return ResponseEntity
+        // .badRequest()
+        // .body("Erreur : L'email est déjà utilisé !");
+        // }
 
 
-// 3. Créer un nouvel utilisateur
+        // 3. Créer un nouvel utilisateur
         User user = new User(
                 signUpRequest.getUsername(),
                 signUpRequest.getEmail(), // Ou null si l'email n'est pas toujours envoyé
@@ -120,13 +119,14 @@ public class AuthController {
         );
 
 
-// 4. Attribuer les rôles à l'utilisateur
+        // 4. Attribuer les rôles à l'utilisateur
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
 
 
         if (strRoles == null) {
-// Si aucun rôle n'est spécifié, attribuer un rôle par défaut (ex: ROLE_RECEPTIONNISTE)
+
+            // Si aucun rôle n'est spécifié, attribuer un rôle par défaut (ex: ROLE_RECEPTIONNISTE)
             Role userRole = roleRepository.findByName(ERole.ROLE_RECEPTIONNISTE)
                     .orElseThrow(() -> new RuntimeException("Erreur: Le rôle RECEPTIONNISTE n'est pas trouvé."));
             roles.add(userRole);
@@ -154,7 +154,9 @@ public class AuthController {
                         roles.add(personnelRole);
                         break;
                     default:
-// Si un rôle inconnu est spécifié, vous pouvez soit le rejeter, soit attribuer un rôle par défaut
+
+                        // Si un rôle inconnu est spécifié, vous pouvez soit le rejeter,
+                        // soit attribuer un rôle par défaut
                         Role defaultRole = roleRepository.findByName(ERole.ROLE_RECEPTIONNISTE)
                                 .orElseThrow(() -> new RuntimeException("Erreur: Le rôle RECEPTIONNISTE n'est pas trouvé."));
                         roles.add(defaultRole);
@@ -170,3 +172,4 @@ public class AuthController {
     }
 
 }
+

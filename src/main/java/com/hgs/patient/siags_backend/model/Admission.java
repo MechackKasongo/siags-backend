@@ -5,8 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.temporal.ChronoUnit;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "admissions")
@@ -68,6 +68,6 @@ public class Admission {
             // Calcule la différence en jours entre la date d'admission et la date de sortie
             return ChronoUnit.DAYS.between(admissionDate, dischargeDate);
         }
-        return null; // Le séjour n'est pas encore terminé ou les dates sont incomplètes
+        return null;
     }
 }

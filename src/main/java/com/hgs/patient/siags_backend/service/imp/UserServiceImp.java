@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -95,17 +96,33 @@ public class UserServiceImp implements UserService {
         return convertUserToUserResponseDTO(user);
     }
 
+    // NOUVELLE MÉTHODE : Implémente la recherche avec pagination.
     @Override
-    public List<UserResponseDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(this::convertUserToUserResponseDTO)
-                .collect(Collectors.toList());
+    public Page<UserResponseDTO> getAllUsersPaginated(Pageable pageable, String searchTerm) {
+        if (StringUtils.hasText(searchTerm)) {
+            // NOTE : Vous devez ajouter une méthode findByUsernameContainingIgnoreCase dans votre UserRepository.
+            return userRepository.findByUsernameContainingIgnoreCase(searchTerm, pageable)
+                    .map(this::convertUserToUserResponseDTO);
+        } else {
+            return userRepository.findAll(pageable)
+                    .map(this::convertUserToUserResponseDTO);
+        }
     }
 
+    // NOUVELLE MÉTHODE : Implémente la recherche sans pagination.
     @Override
-    public Page<UserResponseDTO> getAllUsersPaginated(Pageable pageable) {
-        return userRepository.findAll(pageable)
-                .map(this::convertUserToUserResponseDTO);
+    public List<UserResponseDTO> getAllUsers(String searchTerm) {
+        List<User> users;
+        if (StringUtils.hasText(searchTerm)) {
+            // NOTE : Vous devez ajouter une méthode findByUsernameContainingIgnoreCase dans votre UserRepository.
+            users = userRepository.findByUsernameContainingIgnoreCase(searchTerm);
+        } else {
+            users = userRepository.findAll();
+        }
+
+        return users.stream()
+                .map(this::convertUserToUserResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -159,18 +176,14 @@ public class UserServiceImp implements UserService {
         userRepository.deleteById(id);
     }
 
-
-// Dans votre fichier UserServiceImp.java
-
     private UserResponseDTO convertUserToUserResponseDTO(User user) {
         UserResponseDTO dto = modelMapper.map(user, UserResponseDTO.class);
 
-        // CORRECTION ICI : Changer Collectors.toList() en Collectors.toSet()
-        dto.setRoles((List<String>) user.getRoles().stream()
+        // CORRECTION : Collecte dans une List au lieu d'un Set pour éviter une ClassCastException.
+        dto.setRoles(user.getRoles().stream()
                 .map(role -> role.getName().name())
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toList()));
 
-        // Le reste du code est correct
         Set<String> permissions = user.getRoles().stream()
                 .flatMap(role -> role.getPermissions().stream())
                 .map(permission -> permission.getName())

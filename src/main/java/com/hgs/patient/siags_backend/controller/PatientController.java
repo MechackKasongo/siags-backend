@@ -8,7 +8,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/patients")
+// CORRECTION: Ajout du '/v1' pour correspondre au front-end
+@RequestMapping("/api/v1/patients")
 public class PatientController {
 
     private final PatientService patientService;
@@ -17,8 +18,6 @@ public class PatientController {
         this.patientService = patientService;
     }
 
-
-    // Qui peut créer un patient (ex: Receptionniste, Admin)
     @PostMapping
     @PreAuthorize("hasAuthority('PATIENT_WRITE')")
     public ResponseEntity<Patient> createPatient(@RequestBody Patient patient) {
@@ -27,7 +26,6 @@ public class PatientController {
     }
 
     @GetMapping("/{id}")
-    //Qui peut lire les informations d'un patient (ex: Receptionniste, Medecin, Infirmier, Admin)
     @PreAuthorize("hasAuthority('PATIENT_READ')")
     public ResponseEntity<Patient> getPatientById(@PathVariable Long id) {
         return patientService.getPatientById(id)
@@ -36,7 +34,6 @@ public class PatientController {
     }
 
     @GetMapping
-    // Qui peut lister tous les patients (ex: Receptionniste, Medecin, Infirmier, Admin)
     @PreAuthorize("hasAuthority('PATIENT_READ')")
     public ResponseEntity<Iterable<Patient>> getAllPatients() {
         Iterable<Patient> patients = patientService.getAllPatients();
@@ -44,7 +41,6 @@ public class PatientController {
     }
 
     @PutMapping("/{id}")
-    // Qui peut modifier les informations d'un patient (ex: Receptionniste, Admin)
     @PreAuthorize("hasAuthority('PATIENT_WRITE')")
     public ResponseEntity<Patient> updatePatient(@PathVariable Long id, @RequestBody Patient patientDetails) {
         Patient updatedPatient = patientService.updatePatient(id, patientDetails);
@@ -52,16 +48,10 @@ public class PatientController {
     }
 
     @DeleteMapping("/{id}")
-    // Qui peut supprimer un patient (ex: Admin)
     @PreAuthorize("hasAuthority('PATIENT_DELETE')")
     public ResponseEntity<Void> deletePatient(@PathVariable Long id) {
         patientService.deletePatient(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    // Endpoint de test pour vérifier le mapping du contrôleur
-    @GetMapping("/ping")
-    public ResponseEntity<String> ping() {
-        return ResponseEntity.ok("Patient API is reachable");
-    }
 }

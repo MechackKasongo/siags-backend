@@ -18,8 +18,8 @@ import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/admissions")
-@PreAuthorize("hasRole('ROLE_ADMIN')") // Le rôle Admin peut faire toutes les actions d'admission
+@RequestMapping("/api/v1/admissions")
+@PreAuthorize("hasRole('ROLE_ADMIN')")
 public class AdmissionController {
 
     private final AdmissionService admissionService;
