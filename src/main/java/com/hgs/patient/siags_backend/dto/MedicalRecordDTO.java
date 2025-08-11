@@ -3,6 +3,9 @@ package com.hgs.patient.siags_backend.dto;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 /**
  * DTO pour les dossiers médicaux.
  * Permet de transférer les données du dossier médical sans exposer l'entité complète.
@@ -20,4 +23,7 @@ public class MedicalRecordDTO {
     private String allergies;
     private String currentMedications;
     private String notes;
+    private LocalDateTime createdDate;
+    private List<MedicalEventResponseDTO> medicalEvents;
+
 }

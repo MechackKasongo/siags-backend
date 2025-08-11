@@ -19,21 +19,24 @@ public class Admission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Lien vers le Patient (relation Many-to-One : plusieurs admissions pour un patient)
-    @ManyToOne(fetch = FetchType.LAZY) // Charge le patient uniquement quand il est accédé
-    @JoinColumn(name = "patient_id", nullable = false) // Colonne de la clé étrangère dans la table "admissions"
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
-    @Column(nullable = false)
-    private LocalDateTime admissionDate; // Date et heure de l'admission
-
-    @Column(nullable = false)
-    private String reasonForAdmission; // Motif de l'admission
-
-    // CORRECTION ICI : Changer le type de String à Department et ajouter les annotations de relation
+    // Le champ 'doctor' a été renommé 'medecin' comme demandé
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id") // Nouvelle colonne de clé étrangère pour le département
-    private Department assignedDepartment; // Service assigné (maintenant un objet Department)
+    @JoinColumn(name = "medecin_id") // Le nom de la colonne de la clé étrangère a également été mis à jour
+    private User medecin;
+
+    @Column(nullable = false)
+    private LocalDateTime admissionDate;
+
+    @Column(nullable = false)
+    private String reasonForAdmission;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department assignedDepartment;
     private String roomNumber;
     private String bedNumber;
 
@@ -44,13 +47,10 @@ public class Admission {
     @Column(length = 1000)
     private String dischargeSummary;
 
-    // Optionnel: Lien vers l'utilisateur qui a enregistré l'admission (ex: Réceptionniste)
+    // Optionnel: Lien vers l'utilisateur qui a enregistré l'admission
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admission_personnel_id")
     private User admissionPersonnel;
-
-    // >>> AJOUTEZ CE CHAMP POUR L'ID ODOO DE L'ADMISSION
-    private Long odooAdmissionId;
 
 
     // Enum pour le statut de l'admission

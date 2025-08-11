@@ -12,5 +12,4 @@ public class PatientSummaryDTO {
     private String firstName;
     private String lastName;
     private String recordNumber;
-    private String prenom;
 }

@@ -33,23 +33,18 @@ public class AdmissionServiceImp implements AdmissionService {
     private final PatientRepository patientRepository;
     private final DepartmentRepository departmentRepository;
     private final ModelMapper modelMapper;
-    // Removed the OdooService field.
-    // private final OdooService odooService;
 
     @Autowired
     public AdmissionServiceImp(AdmissionRepository admissionRepository,
                                PatientRepository patientRepository,
                                DepartmentRepository departmentRepository,
                                ModelMapper modelMapper
-                               // Removed OdooService from the constructor
-                               // OdooService odooService
+
     ) {
         this.admissionRepository = admissionRepository;
         this.patientRepository = patientRepository;
         this.departmentRepository = departmentRepository;
         this.modelMapper = modelMapper;
-        // Removed the assignment of OdooService.
-        // this.odooService = odooService;
     }
 
     @Override
@@ -76,19 +71,6 @@ public class AdmissionServiceImp implements AdmissionService {
         }
 
         Admission savedAdmission = admissionRepository.save(admission);
-
-        // Synchroniser avec Odoo - This block has been removed
-        /*
-        try {
-            odooService.createOdooAdmission(savedAdmission);
-            System.out.println("Admission " + savedAdmission.getId() + " créée localement et synchronisée avec Odoo.");
-        } catch (OdooIntegrationException e) {
-            System.err.println("Échec de la synchronisation Odoo lors de la création de l'admission " + savedAdmission.getId() + ": " + e.getMessage());
-            // Envisagez de journaliser l'erreur ou de la relancer pour une gestion plus fine
-        } catch (Exception e) {
-            System.err.println("Erreur inattendue lors de la synchronisation Odoo (création) pour l'admission " + savedAdmission.getId() + ": " + e.getMessage());
-        }
-        */
 
         return modelMapper.map(savedAdmission, AdmissionResponseDTO.class);
     }
@@ -122,9 +104,6 @@ public class AdmissionServiceImp implements AdmissionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Admission non trouvée avec l'ID: " + id));
 
         // Mettre à jour les champs de l'admission existante
-        // Note: Patient et Department ne devraient pas changer pour une admission existante via cette méthode.
-        // Si vous voulez permettre de les changer, il faudra ajouter la logique de recherche ici
-        // et potentiellement un nouveau champ departmentId/patientId dans le DTO si le changement est permis.
         if (admissionRequestDTO.getReasonForAdmission() != null) {
             existingAdmission.setReasonForAdmission(admissionRequestDTO.getReasonForAdmission());
         }
@@ -154,17 +133,6 @@ public class AdmissionServiceImp implements AdmissionService {
 
         Admission updatedAdmission = admissionRepository.save(existingAdmission);
 
-        // Synchroniser la mise à jour avec Odoo - This block has been removed
-        /*
-        try {
-            odooService.updateOdooAdmission(updatedAdmission);
-            System.out.println("Admission " + updatedAdmission.getId() + " mise à jour localement et synchronisée avec Odoo.");
-        } catch (OdooIntegrationException e) {
-            System.err.println("Échec de la synchronisation Odoo lors de la mise à jour de l'admission " + updatedAdmission.getId() + ": " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("Erreur inattendue lors de la synchronisation Odoo (mise à jour) pour l'admission " + updatedAdmission.getId() + ": " + e.getMessage());
-        }
-        */
 
         return modelMapper.map(updatedAdmission, AdmissionResponseDTO.class);
     }
@@ -220,13 +188,11 @@ public class AdmissionServiceImp implements AdmissionService {
         }
 
         // 3. Rechercher les admissions dans le repository
-        // Assurez-vous que votre AdmissionRepository a la méthode suivante :
-        // List<Admission> findByPatientIdAndAdmissionDateBetween(Long patientId, LocalDateTime startOfDay, LocalDateTime endOfDay);
         List<Admission> admissions = admissionRepository.findByPatientIdAndAdmissionDateBetween(patientId, startOfDay, endOfDay);
 
         // 4. Mapper les entités Admission aux DTOs de réponse
         return admissions.stream()
-                .map(this::convertToDto) // Utilisez la méthode utilitaire pour un mappage complet
+                .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 

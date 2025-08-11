@@ -28,7 +28,6 @@ public class ReportServiceImp implements ReportService {
         this.admissionRepository = admissionRepository;
         this.consultationRepository = consultationRepository;
     }
-    // --- Rapports sur les patients ---
 
     @Override
     public Long getTotalPatientsCount() {
@@ -39,8 +38,6 @@ public class ReportServiceImp implements ReportService {
     public List<PatientGenderDistributionDTO> getPatientGenderDistribution() {
         return patientRepository.countPatientsByGender();
     }
-
-    // --- Rapports sur les admissions ---
 
     @Override
     public Long getTotalAdmissionsCount() {

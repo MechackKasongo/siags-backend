@@ -15,6 +15,6 @@ public class UserResponseDTO {
     private String username;
     private String email;
     private String nomComplet;
-    private List<String> roles; // Liste des noms de rôles
+    private List<String> roles;
     private Set<String> permissions;
 }

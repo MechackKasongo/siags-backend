@@ -1,9 +1,10 @@
 package com.hgs.patient.siags_backend.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Entité représentant le dossier médical d'un patient.
@@ -21,10 +22,22 @@ public class MedicalRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Lien One-to-One avec le patient
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "patient_id", unique = true, nullable = false)
+    @JoinColumn(name = "patient_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Patient patient;
+
+    @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<MedicalEvent> medicalEvents;
+
+    // Champs de date gérés automatiquement
+    @Column(nullable = false)
+    private LocalDateTime createdDate;
+
+    private LocalDateTime updatedDate;
 
     // Antécédents médicaux
     @Column(columnDefinition = "TEXT")
@@ -45,4 +58,15 @@ public class MedicalRecord {
     // Notes générales
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @PrePersist
+    protected void onCreate() {
+        createdDate = LocalDateTime.now();
+        updatedDate = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedDate = LocalDateTime.now();
+    }
 }

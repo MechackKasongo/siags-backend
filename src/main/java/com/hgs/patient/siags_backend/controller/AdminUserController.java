@@ -16,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -47,8 +48,17 @@ public class AdminUserController {
     @GetMapping("/username/{username}")
     @PreAuthorize("hasAuthority('USER_READ')")
     public ResponseEntity<UserResponseDTO> getUserByUsername(@PathVariable String username) {
-        UserResponseDTO user = userService.getUserByUsername(username);
-        return ResponseEntity.ok(user);
+        // CORRECTION: The service method now returns an Optional
+        Optional<UserResponseDTO> userOptional = userService.getUserByUsername(username);
+
+        // Check if the user was found
+        if (userOptional.isPresent()) {
+            // If present, get the user and return a 200 OK response
+            return ResponseEntity.ok(userOptional.get());
+        } else {
+            // If not present, return a 404 Not Found response
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping
@@ -56,7 +66,7 @@ public class AdminUserController {
     public ResponseEntity<?> getAllUsers(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
-            @RequestParam(required = false) String searchTerm, // AJOUT du paramètre de recherche
+            @RequestParam(required = false) String searchTerm,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String sortDir) {
 
@@ -66,10 +76,10 @@ public class AdminUserController {
                 sort = sortDir != null && sortDir.equalsIgnoreCase("DESC") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
             }
             Pageable pageable = PageRequest.of(page, size, sort);
-            Page<UserResponseDTO> usersPage = userService.getAllUsersPaginated(pageable, searchTerm); // MODIFICATION
+            Page<UserResponseDTO> usersPage = userService.getAllUsersPaginated(pageable, searchTerm);
             return ResponseEntity.ok(usersPage);
         } else {
-            List<UserResponseDTO> users = userService.getAllUsers(searchTerm); // MODIFICATION
+            List<UserResponseDTO> users = userService.getAllUsers(searchTerm);
             return ResponseEntity.ok(users);
         }
     }

@@ -1,62 +1,34 @@
 package com.hgs.patient.siags_backend.dto;
 
-
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
-
 import jakarta.validation.constraints.NotNull;
-
-import jakarta.validation.constraints.Size;
-
-import lombok.AllArgsConstructor;
-
-import lombok.Data;
-
-import lombok.NoArgsConstructor;
-
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-
-@Data
-
-@NoArgsConstructor
-
-@AllArgsConstructor
-
+/**
+ * DTO pour la création ou la mise à jour d'une consultation.
+ */
+@Setter
+@Getter
 public class ConsultationRequest {
-// Ne pas inclure l'ID ici, il est géré par le chemin de l'URL pour les PUT
 
+    @NotNull(message = "L'ID de l'admission ne peut pas être nul")
+    private Long admissionId;
+    private Long patientId;
+    private Long doctorId;
 
-    @NotNull(message = "La date de consultation est obligatoire")
+    // CORRECTION : Le pattern est maintenant 'yyyy-MM-dd'T'HH:mm'
+    @NotNull(message = "La date de consultation ne peut pas être nulle")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime consultationDate;
 
-    private LocalDateTime consultationDate; // Peut être omis si toujours LocalDateTime.now() dans le service
-
-
-    @NotBlank(message = "Le motif de consultation est obligatoire")
-
-    @Size(max = 500, message = "Le motif de consultation ne peut pas dépasser 500 caractères")
-
+    @NotBlank(message = "La raison de la consultation est requise")
     private String reasonForConsultation;
-
-
-    @Size(max = 1000, message = "Les observations ne peuvent pas dépasser 1000 caractères")
-
     private String observations;
-
-
-    @Size(max = 500, message = "Le diagnostic ne peut pas dépasser 500 caractères")
-
     private String diagnosis;
-
-
-    @Size(max = 1000, message = "Le plan de traitement ne peut pas dépasser 1000 caractères")
-
     private String treatmentPlan;
-
-
-    @Size(max = 1000, message = "Les notes ne peuvent pas dépasser 1000 caractères")
-
     private String notes;
-
-
 }

@@ -21,6 +21,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -90,17 +91,20 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public UserResponseDTO getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec le nom d'utilisateur: " + username));
-        return convertUserToUserResponseDTO(user);
+    public Optional<UserResponseDTO> getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(this::convertUserToUserResponseDTO);
     }
 
-    // NOUVELLE MÉTHODE : Implémente la recherche avec pagination.
+    @Override
+    public Optional<Long> getUserIdByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(User::getId);
+    }
+
     @Override
     public Page<UserResponseDTO> getAllUsersPaginated(Pageable pageable, String searchTerm) {
         if (StringUtils.hasText(searchTerm)) {
-            // NOTE : Vous devez ajouter une méthode findByUsernameContainingIgnoreCase dans votre UserRepository.
             return userRepository.findByUsernameContainingIgnoreCase(searchTerm, pageable)
                     .map(this::convertUserToUserResponseDTO);
         } else {
@@ -109,12 +113,10 @@ public class UserServiceImp implements UserService {
         }
     }
 
-    // NOUVELLE MÉTHODE : Implémente la recherche sans pagination.
     @Override
     public List<UserResponseDTO> getAllUsers(String searchTerm) {
         List<User> users;
         if (StringUtils.hasText(searchTerm)) {
-            // NOTE : Vous devez ajouter une méthode findByUsernameContainingIgnoreCase dans votre UserRepository.
             users = userRepository.findByUsernameContainingIgnoreCase(searchTerm);
         } else {
             users = userRepository.findAll();
@@ -179,7 +181,6 @@ public class UserServiceImp implements UserService {
     private UserResponseDTO convertUserToUserResponseDTO(User user) {
         UserResponseDTO dto = modelMapper.map(user, UserResponseDTO.class);
 
-        // CORRECTION : Collecte dans une List au lieu d'un Set pour éviter une ClassCastException.
         dto.setRoles(user.getRoles().stream()
                 .map(role -> role.getName().name())
                 .collect(Collectors.toList()));

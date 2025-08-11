@@ -5,6 +5,7 @@ import com.hgs.patient.siags_backend.dto.ConsultationRequest;
 import com.hgs.patient.siags_backend.dto.ConsultationResponseDTO;
 import com.hgs.patient.siags_backend.exception.ResourceNotFoundException;
 import com.hgs.patient.siags_backend.model.*;
+import com.hgs.patient.siags_backend.repository.AdmissionRepository;
 import com.hgs.patient.siags_backend.repository.ConsultationRepository;
 import com.hgs.patient.siags_backend.repository.PatientRepository;
 import com.hgs.patient.siags_backend.repository.UserRepository;
@@ -29,13 +30,19 @@ public class ConsultationService {
     private final ConsultationRepository consultationRepository;
     private final PatientRepository patientRepository;
     private final UserRepository userRepository;
-    private final AuditService auditService; // Injecter le service d'audit
+    private final AdmissionRepository admissionRepository; // NOUVEAU: Injection du repository d'admission
+    private final AuditService auditService;
 
     @Autowired
-    public ConsultationService(ConsultationRepository consultationRepository, PatientRepository patientRepository, UserRepository userRepository, AuditService auditService) {
+    public ConsultationService(ConsultationRepository consultationRepository,
+                               PatientRepository patientRepository,
+                               UserRepository userRepository,
+                               AdmissionRepository admissionRepository, // NOUVEAU: Ajout de l'admissionRepository au constructeur
+                               AuditService auditService) {
         this.consultationRepository = consultationRepository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
+        this.admissionRepository = admissionRepository;
         this.auditService = auditService;
     }
 
@@ -57,7 +64,8 @@ public class ConsultationService {
 
         if (consultation.getDoctor() != null) {
             dto.setDoctorId(consultation.getDoctor().getId());
-            dto.setDoctorNomComplet(consultation.getDoctor().getNomComplet() + " " + consultation.getDoctor().getNomComplet());
+            // Correction ici: Le nom complet devrait être le nom complet du docteur, pas le même nom deux fois.
+            dto.setDoctorNomComplet(consultation.getDoctor().getNomComplet());
         }
 
         if (consultation.getRecordedBy() != null) {
@@ -72,20 +80,24 @@ public class ConsultationService {
         return dto;
     }
 
-    // Créer une nouvelle consultation à partir d'un DTO de requête
+    /**
+     * NOUVEAU: Créer une consultation à partir d'un DTO de requête.
+     * Cette méthode utilise maintenant l'admissionId pour trouver le patient et le médecin.
+     * La signature a été changée pour ne prendre que ConsultationRequest.
+     */
     @Transactional
-    public ConsultationResponseDTO createConsultation(Long patientId, Long doctorId, ConsultationRequest request) {
-        Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient non trouvé avec l'ID : " + patientId));
+    public ConsultationResponseDTO createConsultation(ConsultationRequest request) {
+        // 1. Chercher l'admission associée
+        Admission admission = admissionRepository.findById(request.getAdmissionId())
+                .orElseThrow(() -> new ResourceNotFoundException("Admission non trouvée avec l'ID : " + request.getAdmissionId()));
 
-        User doctor = userRepository.findById(doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Médecin (Utilisateur) non trouvé avec l'ID : " + doctorId));
+        // 2. Extraire le patient et le médecin de l'admission
+        Patient patient = admission.getPatient();
+        User medecin = admission.getMedecin(); // L'appel a été mis à jour de getDoctor() à getMedecin()
 
         Consultation consultation = new Consultation();
         consultation.setPatient(patient);
-        consultation.setDoctor(doctor);
-
-        // Mappage des champs du DTO de requête vers l'entité
+        consultation.setDoctor(medecin); // On utilise le 'medecin' de l'admission pour le 'doctor' de la consultation
         consultation.setConsultationDate(request.getConsultationDate());
         consultation.setReasonForConsultation(request.getReasonForConsultation());
         consultation.setObservations(request.getObservations());
@@ -104,8 +116,7 @@ public class ConsultationService {
 
         Consultation savedConsultation = consultationRepository.save(consultation);
 
-        // Appel du service d'audit
-        auditService.logAction(AuditAction.CREATE, AuditResource.CONSULTATION, savedConsultation.getId(), "Création d'une consultation pour le patient " + patientId);
+        auditService.logAction(AuditAction.CREATE, AuditResource.CONSULTATION, savedConsultation.getId(), "Création d'une consultation pour le patient " + patient.getId());
 
         return mapToDTO(savedConsultation);
     }
@@ -116,7 +127,6 @@ public class ConsultationService {
         Consultation consultation = consultationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consultation non trouvée avec l'ID : " + id));
 
-        // Appel du service d'audit pour les lectures de ressources
         auditService.logAction(AuditAction.READ, AuditResource.CONSULTATION, consultation.getId(), "Lecture de la consultation " + id);
 
         return mapToDTO(consultation);
@@ -156,6 +166,7 @@ public class ConsultationService {
         Consultation consultation = consultationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consultation non trouvée avec l'ID : " + id));
 
+        // Mappage des champs du DTO de requête vers l'entité
         consultation.setReasonForConsultation(request.getReasonForConsultation());
         consultation.setObservations(request.getObservations());
         consultation.setDiagnosis(request.getDiagnosis());
@@ -164,7 +175,6 @@ public class ConsultationService {
 
         Consultation updatedConsultation = consultationRepository.save(consultation);
 
-        // Appel du service d'audit
         auditService.logAction(AuditAction.UPDATE, AuditResource.CONSULTATION, updatedConsultation.getId(), "Mise à jour de la consultation " + id);
 
         return mapToDTO(updatedConsultation);
@@ -177,7 +187,6 @@ public class ConsultationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Consultation non trouvée avec l'ID : " + id));
         consultationRepository.delete(consultation);
 
-        // Appel du service d'audit
         auditService.logAction(AuditAction.DELETE, AuditResource.CONSULTATION, id, "Suppression de la consultation " + id);
     }
 

@@ -6,37 +6,34 @@ import com.hgs.patient.siags_backend.model.MedicalRecord;
 import com.hgs.patient.siags_backend.model.Patient;
 import com.hgs.patient.siags_backend.repository.MedicalRecordRepository;
 import com.hgs.patient.siags_backend.repository.PatientRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
 
-/**
- * Service pour la gestion des opérations métier liées aux dossiers médicaux.
- * Il gère la création, la mise à jour et la récupération des dossiers médicaux.
- */
 @Service
 public class MedicalRecordService {
 
     private final MedicalRecordRepository medicalRecordRepository;
     private final PatientRepository patientRepository;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public MedicalRecordService(MedicalRecordRepository medicalRecordRepository, PatientRepository patientRepository) {
+    public MedicalRecordService(MedicalRecordRepository medicalRecordRepository, PatientRepository patientRepository, ModelMapper modelMapper) {
         this.medicalRecordRepository = medicalRecordRepository;
         this.patientRepository = patientRepository;
+        this.modelMapper = modelMapper;
     }
 
     /**
-     * Crée un nouveau dossier médical pour un patient donné.
-     *
-     * @param patientId        L'ID du patient.
-     * @param medicalRecordDTO Les données du dossier médical à créer.
-     * @return Le DTO du dossier médical créé.
+     * Crée un dossier médical initial pour un patient.
+     * Cette méthode est appelée par le PatientService lors de la création d'un patient.
+     * Elle ne prend pas de DTO en paramètre pour simplifier le processus d'initialisation.
      */
     @Transactional
-    public MedicalRecordDTO createMedicalRecord(Long patientId, MedicalRecordDTO medicalRecordDTO) {
+    public MedicalRecord createMedicalRecordForPatient(Long patientId) {
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient non trouvé avec l'ID : " + patientId));
 
@@ -46,62 +43,38 @@ public class MedicalRecordService {
 
         MedicalRecord medicalRecord = new MedicalRecord();
         medicalRecord.setPatient(patient);
-        medicalRecord.setMedicalHistory(medicalRecordDTO.getMedicalHistory());
-        medicalRecord.setFamilyHistory(medicalRecordDTO.getFamilyHistory());
-        medicalRecord.setAllergies(medicalRecordDTO.getAllergies());
-        medicalRecord.setCurrentMedications(medicalRecordDTO.getCurrentMedications());
-        medicalRecord.setNotes(medicalRecordDTO.getNotes());
+        medicalRecord.setCreatedDate(LocalDateTime.now());
 
-        MedicalRecord savedMedicalRecord = medicalRecordRepository.save(medicalRecord);
-        return mapToDTO(savedMedicalRecord);
+        return medicalRecordRepository.save(medicalRecord);
     }
 
     /**
-     * Récupère le dossier médical d'un patient par son ID.
-     *
-     * @param patientId L'ID du patient.
-     * @return Le DTO du dossier médical.
+     * Met à jour les informations du dossier médical avec les données d'un DTO.
+     * Cette méthode est appelée par le contrôleur API du dossier médical.
      */
+    @Transactional
+    public MedicalRecordDTO updateMedicalRecordDetails(Long patientId, MedicalRecordDTO medicalRecordDTO) {
+        MedicalRecord medicalRecord = medicalRecordRepository.findByPatientId(patientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Dossier médical non trouvé pour le patient avec l'ID : " + patientId));
+
+        modelMapper.map(medicalRecordDTO, medicalRecord);
+        medicalRecord.setUpdatedDate(LocalDateTime.now());
+
+        MedicalRecord updatedMedicalRecord = medicalRecordRepository.save(medicalRecord);
+        return modelMapper.map(updatedMedicalRecord, MedicalRecordDTO.class);
+    }
+
     @Transactional(readOnly = true)
     public MedicalRecordDTO getMedicalRecordByPatientId(Long patientId) {
         MedicalRecord medicalRecord = medicalRecordRepository.findByPatientId(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Dossier médical non trouvé pour le patient avec l'ID : " + patientId));
-        return mapToDTO(medicalRecord);
+        return modelMapper.map(medicalRecord, MedicalRecordDTO.class);
     }
 
-    /**
-     * Met à jour un dossier médical existant pour un patient.
-     *
-     * @param patientId        L'ID du patient.
-     * @param medicalRecordDTO Les données de mise à jour.
-     * @return Le DTO du dossier médical mis à jour.
-     */
-    @Transactional
-    public MedicalRecordDTO updateMedicalRecord(Long patientId, MedicalRecordDTO medicalRecordDTO) {
-        MedicalRecord medicalRecord = medicalRecordRepository.findByPatientId(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Dossier médical non trouvé pour le patient avec l'ID : " + patientId));
-
-        // Mettez à jour les champs si les valeurs ne sont pas nulles
-        Optional.ofNullable(medicalRecordDTO.getMedicalHistory()).ifPresent(medicalRecord::setMedicalHistory);
-        Optional.ofNullable(medicalRecordDTO.getFamilyHistory()).ifPresent(medicalRecord::setFamilyHistory);
-        Optional.ofNullable(medicalRecordDTO.getAllergies()).ifPresent(medicalRecord::setAllergies);
-        Optional.ofNullable(medicalRecordDTO.getCurrentMedications()).ifPresent(medicalRecord::setCurrentMedications);
-        Optional.ofNullable(medicalRecordDTO.getNotes()).ifPresent(medicalRecord::setNotes);
-
-        MedicalRecord updatedMedicalRecord = medicalRecordRepository.save(medicalRecord);
-        return mapToDTO(updatedMedicalRecord);
-    }
-
-    // Méthode utilitaire pour mapper l'entité MedicalRecord au DTO
-    private MedicalRecordDTO mapToDTO(MedicalRecord medicalRecord) {
-        MedicalRecordDTO dto = new MedicalRecordDTO();
-        dto.setId(medicalRecord.getId());
-        dto.setPatientId(medicalRecord.getPatient().getId());
-        dto.setMedicalHistory(medicalRecord.getMedicalHistory());
-        dto.setFamilyHistory(medicalRecord.getFamilyHistory());
-        dto.setAllergies(medicalRecord.getAllergies());
-        dto.setCurrentMedications(medicalRecord.getCurrentMedications());
-        dto.setNotes(medicalRecord.getNotes());
-        return dto;
+    @Transactional(readOnly = true)
+    public MedicalRecordDTO getMedicalRecordById(Long recordId) {
+        MedicalRecord medicalRecord = medicalRecordRepository.findById(recordId)
+                .orElseThrow(() -> new ResourceNotFoundException("Dossier médical non trouvé avec l'ID : " + recordId));
+        return modelMapper.map(medicalRecord, MedicalRecordDTO.class);
     }
 }

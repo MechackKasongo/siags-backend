@@ -1,7 +1,5 @@
 package com.hgs.patient.siags_backend.service.imp;
 
-// ... (vos imports existants)
-
 import com.hgs.patient.siags_backend.dto.PatientDailyRecordRequestDTO;
 import com.hgs.patient.siags_backend.dto.PatientDailyRecordResponseDTO;
 import com.hgs.patient.siags_backend.dto.PatientSummaryDTO;
@@ -107,8 +105,7 @@ public class PatientDailyRecordServiceImp implements PatientDailyRecordService {
 
     @Override
     @Transactional // Nécessaire car cette méthode modifie la base de données (delete)
-    // C'EST ICI LA CORRECTION : CHANGEMENT DE NOM DE LA MÉTHODE
-    public void deleteDailyRecord(Long id) { // <-- Nom de la méthode corrigé
+    public void deleteDailyRecord(Long id) {
         if (!dailyRecordRepository.existsById(id)) {
             throw new ResourceNotFoundException("Enregistrement quotidien non trouvé avec l'ID: " + id);
         }
